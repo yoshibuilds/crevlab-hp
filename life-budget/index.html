@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>生活費シミュレーター | 年収・居住地から家賃・光熱費を一発診断 | Clarix</title>
+  <meta name="description" content="年収・職種・居住地を入力するだけで、推奨家賃・食費・光熱費・貯蓄額を自動計算。全47都道府県対応の無料生活費シミュレーターです。" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary:   #2a9d8f;
+      --primary-d: #1e7469;
+      --primary-l: #57c4b7;
+      --accent:    #e9c46a;
+      --danger:    #e76f51;
+      --bg:        #f4faf9;
+      --card:      #ffffff;
+      --text:      #1a2e2b;
+      --muted:     #6b8c87;
+      --border:    #cce4e1;
+      --radius:    12px;
+      --shadow:    0 4px 20px rgba(42,157,143,.12);
+    }
+    body {
+      font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 60px;
+    }
+
+    /* ===== ヘッダー ===== */
+    header {
+      background: linear-gradient(135deg, var(--primary-d) 0%, var(--primary) 60%, var(--primary-l) 100%);
+      color: #fff;
+      text-align: center;
+      padding: 40px 20px 30px;
+    }
+    header h1 { font-size: clamp(1.4rem, 5vw, 2rem); font-weight: 700; letter-spacing: .05em; }
+    header p  { margin-top: 8px; font-size: .95rem; opacity: .88; }
+
+    /* ===== メインレイアウト ===== */
+    main {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 24px 16px;
+    }
+
+    /* ===== カード ===== */
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px 20px;
+      margin-bottom: 20px;
+    }
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--primary-d);
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--border);
+    }
+
+    /* ===== フォーム要素 ===== */
+    .form-group { margin-bottom: 18px; }
+    label.field-label {
+      display: block;
+      font-size: .85rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 6px;
+      letter-spacing: .04em;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 1rem;
+      color: var(--text);
+      background: #f9fdfc;
+      transition: border-color .2s;
+      appearance: textfield;
+    }
+    input[type="number"]:focus { outline: none; border-color: var(--primary); background: #fff; }
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+    .toggle-group {
+      display: flex;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+    .toggle-group button {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: transparent;
+      font-size: .9rem;
+      cursor: pointer;
+      color: var(--muted);
+      transition: background .2s, color .2s;
+    }
+    .toggle-group button.active {
+      background: var(--primary);
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .radio-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .radio-group label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      font-size: .9rem;
+      padding: 8px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      transition: border-color .2s, background .2s;
+      user-select: none;
+    }
+    .radio-group input[type="radio"] { display: none; }
+    .radio-group input[type="radio"]:checked + span { color: var(--primary-d); font-weight: 700; }
+    .radio-group label:has(input[type="radio"]:checked) {
+      border-color: var(--primary);
+      background: #e6f7f5;
+    }
+
+    select {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 1rem;
+      color: var(--text);
+      background: #f9fdfc;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b8c87' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      cursor: pointer;
+      transition: border-color .2s;
+    }
+    select:focus { outline: none; border-color: var(--primary); background-color: #fff; }
+
+    /* ===== 診断ボタン ===== */
+    #diagnose-btn {
+      display: block;
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-l) 100%);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: .06em;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(42,157,143,.35);
+      transition: transform .15s, box-shadow .15s;
+      margin-top: 4px;
+    }
+    #diagnose-btn:hover  { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(42,157,143,.45); }
+    #diagnose-btn:active { transform: translateY(0); }
+
+    /* ===== 結果エリア ===== */
+    #result-section {
+      display: none;
+      animation: fadeInUp .45s ease both;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .income-banner {
+      background: linear-gradient(135deg, var(--primary-d), var(--primary));
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+    }
+    .income-banner .label  { font-size: .85rem; opacity: .85; margin-bottom: 6px; }
+    .income-banner .amount { font-size: clamp(1.6rem, 6vw, 2.2rem); font-weight: 700; }
+
+    .breakdown-table { width: 100%; border-collapse: collapse; }
+    .breakdown-table th, .breakdown-table td {
+      padding: 11px 10px;
+      font-size: .875rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .breakdown-table th { color: var(--muted); font-weight: 600; font-size: .78rem; letter-spacing: .04em; }
+    .breakdown-table tr:last-child td { border-bottom: none; }
+    .breakdown-table .item-name   { font-weight: 600; color: var(--text); }
+    .breakdown-table .item-amount { font-weight: 700; color: var(--primary-d); white-space: nowrap; }
+    .breakdown-table .item-hint   { font-size: .78rem; color: var(--muted); padding-top: 2px; line-height: 1.4; }
+    .breakdown-table .hint-row td { padding-top: 0; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+
+    .row-free .item-name    { color: var(--primary); }
+    .row-free .item-amount  { color: var(--primary); font-size: 1rem; }
+    .row-surplus .item-name  { color: var(--danger); }
+    .row-surplus .item-amount { color: var(--danger); }
+
+    .chart-wrapper {
+      position: relative;
+      max-width: 300px;
+      margin: 0 auto 8px;
+    }
+
+    /* ===== コピーボタン ===== */
+    #copy-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 13px;
+      background: var(--card);
+      color: var(--primary);
+      border: 2px solid var(--primary);
+      border-radius: var(--radius);
+      font-size: .95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .2s, color .2s;
+    }
+    #copy-btn:hover { background: var(--primary); color: #fff; }
+    #copy-btn.copied { background: var(--primary); color: #fff; }
+
+    /* ===== シェアボタン ===== */
+    .share-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .share-btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 12px;
+      border-radius: var(--radius);
+      font-size: .88rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: opacity .2s;
+    }
+    .share-btn:hover { opacity: .82; }
+    .share-btn-x   { background: #000; color: #fff; }
+    .share-btn-url { background: var(--primary-l); color: #fff; }
+
+    /* ===== シミュレーション共通 ===== */
+    .sim-desc { font-size: .83rem; color: var(--muted); margin-bottom: 10px; }
+    .sim-btn-group { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+    .sim-btn {
+      padding: 8px 18px;
+      border: 1.5px solid var(--primary);
+      border-radius: 20px;
+      background: transparent;
+      color: var(--primary);
+      font-size: .88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s, color .2s;
+    }
+    .sim-btn:hover, .sim-btn.active { background: var(--primary); color: #fff; }
+
+    .sim-result-box {
+      background: #e6f7f5;
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+    .sim-result-box .sim-main { font-size: 1.05rem; font-weight: 700; color: var(--primary-d); }
+    .sim-result-box .sim-sub  { font-size: .81rem; color: var(--muted); margin-top: 5px; line-height: 1.5; }
+
+    .sim-cta {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 12px;
+      padding: 11px;
+      background: var(--accent);
+      color: var(--text);
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: .88rem;
+      text-decoration: none;
+      transition: opacity .2s;
+    }
+    .sim-cta:hover { opacity: .82; }
+    .sim-cta-row { display: flex; gap: 8px; margin-top: 12px; }
+    .sim-cta-row .sim-cta { flex: 1; font-size: .82rem; margin-top: 0; }
+
+    /* ===== 年収別早見表 ===== */
+    .table-section {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 0 16px 48px;
+    }
+    .table-section h2 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--primary-d);
+      margin-bottom: 6px;
+    }
+    .table-note { font-size: .76rem; color: var(--muted); margin-bottom: 12px; }
+    .income-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    .income-table th {
+      background: var(--primary);
+      color: #fff;
+      padding: 9px 6px;
+      text-align: center;
+      font-size: .76rem;
+      font-weight: 600;
+    }
+    .income-table td {
+      padding: 8px 6px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .income-table tr:nth-child(even) td { background: #f0faf9; }
+    .income-table .col-income { font-weight: 700; color: var(--primary-d); text-align: left; padding-left: 10px; }
+
+    /* ===== エラー ===== */
+    .error-msg { color: var(--danger); font-size: .85rem; margin-top: 6px; display: none; }
+
+    /* ===== フッター ===== */
+    footer { text-align: center; color: var(--muted); font-size: .78rem; padding: 20px 16px 10px; }
+
+    /* ===== レスポンシブ ===== */
+    @media (max-width: 400px) {
+      .card { padding: 18px 14px; }
+      .breakdown-table th, .breakdown-table td { padding: 9px 6px; font-size: .82rem; }
+      .income-table { font-size: .72rem; }
+      .income-table th, .income-table td { padding: 6px 3px; }
+      .share-group { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>生活費シミュレーター</h1>
+  <p>年収・職種・居住地を入力するだけで、最適な家計プランを診断</p>
+</header>
+
+<main>
+
+  <!-- ===== 入力フォーム ===== -->
+  <div class="card">
+    <div class="card-title">基本情報を入力</div>
+
+    <div class="form-group">
+      <label class="field-label">年収（万円）</label>
+      <div class="toggle-group" id="income-type-toggle">
+        <button id="btn-gross" class="active" onclick="setIncomeType('gross')">額面</button>
+        <button id="btn-net"   onclick="setIncomeType('net')">手取り</button>
+      </div>
+      <input type="number" id="income-input" placeholder="例：400" min="0" max="99999" />
+      <div class="error-msg" id="income-error">年収を入力してください。</div>
+    </div>
+
+    <div class="form-group">
+      <label class="field-label">雇用形態</label>
+      <div class="radio-group">
+        <label><input type="radio" name="employment" value="employee" checked /><span>会社員</span></label>
+        <label><input type="radio" name="employment" value="civil" /><span>公務員</span></label>
+        <label><input type="radio" name="employment" value="freelance" /><span>フリーランス・個人事業主</span></label>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="field-label">居住地（都道府県）</label>
+      <select id="prefecture-select">
+        <option value="">都道府県を選択してください</option>
+        <option value="hokkaido">北海道</option>
+        <option value="aomori">青森県</option>
+        <option value="iwate">岩手県</option>
+        <option value="miyagi">宮城県</option>
+        <option value="akita">秋田県</option>
+        <option value="yamagata">山形県</option>
+        <option value="fukushima">福島県</option>
+        <option value="ibaraki">茨城県</option>
+        <option value="tochigi">栃木県</option>
+        <option value="gunma">群馬県</option>
+        <option value="saitama">埼玉県</option>
+        <option value="chiba">千葉県</option>
+        <option value="tokyo">東京都</option>
+        <option value="kanagawa">神奈川県</option>
+        <option value="niigata">新潟県</option>
+        <option value="toyama">富山県</option>
+        <option value="ishikawa">石川県</option>
+        <option value="fukui">福井県</option>
+        <option value="yamanashi">山梨県</option>
+        <option value="nagano">長野県</option>
+        <option value="gifu">岐阜県</option>
+        <option value="shizuoka">静岡県</option>
+        <option value="aichi">愛知県</option>
+        <option value="mie">三重県</option>
+        <option value="shiga">滋賀県</option>
+        <option value="kyoto">京都府</option>
+        <option value="osaka">大阪府</option>
+        <option value="hyogo">兵庫県</option>
+        <option value="nara">奈良県</option>
+        <option value="wakayama">和歌山県</option>
+        <option value="tottori">鳥取県</option>
+        <option value="shimane">島根県</option>
+        <option value="okayama">岡山県</option>
+        <option value="hiroshima">広島県</option>
+        <option value="yamaguchi">山口県</option>
+        <option value="tokushima">徳島県</option>
+        <option value="kagawa">香川県</option>
+        <option value="ehime">愛媛県</option>
+        <option value="kochi">高知県</option>
+        <option value="fukuoka">福岡県</option>
+        <option value="saga">佐賀県</option>
+        <option value="nagasaki">長崎県</option>
+        <option value="kumamoto">熊本県</option>
+        <option value="oita">大分県</option>
+        <option value="miyazaki">宮崎県</option>
+        <option value="kagoshima">鹿児島県</option>
+        <option value="okinawa">沖縄県</option>
+      </select>
+      <div class="error-msg" id="pref-error">居住地を選択してください。</div>
+    </div>
+
+    <div class="form-group">
+      <label class="field-label">家族構成</label>
+      <div class="radio-group">
+        <label><input type="radio" name="family" value="single" checked /><span>単身</span></label>
+        <label><input type="radio" name="family" value="couple" /><span>2人暮らし</span></label>
+        <label><input type="radio" name="family" value="family" /><span>子あり（3人以上）</span></label>
+      </div>
+    </div>
+
+    <button id="diagnose-btn" onclick="diagnose()">診断する</button>
+  </div>
+
+  <!-- ===== 結果エリア ===== -->
+  <div id="result-section">
+
+    <div class="income-banner">
+      <div class="label">推定 手取り月収</div>
+      <div class="amount" id="res-monthly"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">家計の内訳（円グラフ）</div>
+      <div class="chart-wrapper">
+        <canvas id="budgetChart"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">費目別シミュレーション結果</div>
+      <table class="breakdown-table">
+        <thead>
+          <tr>
+            <th>費目</th>
+            <th style="text-align:right;">金額（月）</th>
+          </tr>
+        </thead>
+        <tbody id="breakdown-body"></tbody>
+      </table>
+    </div>
+
+    <!-- コピー＆シェアボタン -->
+    <button id="copy-btn" onclick="copyResult()">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      診断結果をコピー
+    </button>
+    <div class="share-group">
+      <button class="share-btn share-btn-x" onclick="shareOnX()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.91-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        Xでシェア
+      </button>
+      <button class="share-btn share-btn-url" id="url-share-btn" onclick="shareURL()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        URLをコピー
+      </button>
+    </div>
+
+    <!-- 年収アップシミュレーション -->
+    <div class="card" id="income-up-card" style="display:none;">
+      <div class="card-title">年収アップで生活はどう変わる？</div>
+      <p class="sim-desc">転職や昇給で年収が上がった場合の手取り・貯蓄の変化をシミュレーション</p>
+      <div class="sim-btn-group">
+        <button class="sim-btn" id="up-btn-50"  onclick="calcIncomeUp(50)">＋50万円</button>
+        <button class="sim-btn" id="up-btn-100" onclick="calcIncomeUp(100)">＋100万円</button>
+        <button class="sim-btn" id="up-btn-150" onclick="calcIncomeUp(150)">＋150万円</button>
+      </div>
+      <div id="income-up-result"></div>
+      <a class="sim-cta" href="#" id="tensyoku-link" style="display:none;" target="_blank" rel="noopener">転職で年収アップを目指す →</a>
+    </div>
+
+    <!-- 節約シミュレーション -->
+    <div class="card" id="savings-sim-card" style="display:none;">
+      <div class="card-title">節約したら年間いくら増える？</div>
+      <p class="sim-desc">支出を少し見直すだけで積み上がる年間節約額を計算</p>
+      <div class="sim-btn-group">
+        <button class="sim-btn" id="save-btn-rent" onclick="calcSaving('rent')">家賃▼1万円</button>
+        <button class="sim-btn" id="save-btn-sim"  onclick="calcSaving('sim')">格安SIM切替</button>
+        <button class="sim-btn" id="save-btn-both" onclick="calcSaving('both')">両方まとめて</button>
+      </div>
+      <div id="savings-sim-result"></div>
+      <div class="sim-cta-row" id="savings-cta-row" style="display:none;">
+        <a class="sim-cta" href="#" target="_blank" rel="noopener">格安SIMを比べる →</a>
+        <a class="sim-cta" href="#" target="_blank" rel="noopener">お得な物件を探す →</a>
+      </div>
+    </div>
+
+  </div><!-- /result-section -->
+
+</main>
+
+<!-- ===== 年収別早見表（SEO用） ===== -->
+<section class="table-section">
+  <h2>年収別 手取り・推奨家賃 早見表</h2>
+  <p class="table-note">※ 会社員・単身の場合の概算値。実際の手取りは扶養控除・住宅ローン控除等により異なります。</p>
+  <table class="income-table">
+    <thead>
+      <tr>
+        <th style="text-align:left;padding-left:10px;">年収（額面）</th>
+        <th>手取り月収</th>
+        <th>推奨家賃<br>東京</th>
+        <th>推奨家賃<br>大阪</th>
+        <th>推奨家賃<br>地方</th>
+      </tr>
+    </thead>
+    <tbody id="income-table-body"></tbody>
+  </table>
+</section>
+
+<footer>
+  ※ 本シミュレーターは概算値です。実際の生活費は個人の状況により異なります。<br>
+  Powered by Clarix
+</footer>
+
+<script>
+/* =====================================================
+   定数・マスターデータ
+===================================================== */
+const RENT_RATIO = {
+  tokyo:     0.33, kanagawa:  0.30, osaka:     0.30, aichi:     0.28,
+  fukuoka:   0.28, kyoto:     0.29, saitama:   0.26, chiba:     0.26,
+  hyogo:     0.26, shizuoka:  0.24, hiroshima: 0.25, miyagi:    0.24,
+  hokkaido:  0.23, nagano:    0.22, niigata:   0.22, gifu:      0.22,
+  mie:       0.22, shiga:     0.23, okayama:   0.23, ishikawa:  0.23,
+  fukushima: 0.21, ibaraki:   0.22, tochigi:   0.21, gunma:     0.20,
+  yamanashi: 0.20, toyama:    0.21, fukui:     0.20, nara:      0.22,
+  wakayama:  0.20, tottori:   0.19, shimane:   0.18, yamaguchi: 0.20,
+  tokushima: 0.20, kagawa:    0.21, ehime:     0.20, kochi:     0.19,
+  saga:      0.20, nagasaki:  0.20, kumamoto:  0.21, oita:      0.20,
+  miyazaki:  0.19, kagoshima: 0.20, okinawa:   0.22, aomori:    0.19,
+  iwate:     0.18, akita:     0.18, yamagata:  0.19,
+};
+
+const FOOD_BASE = { single: 30000, couple: 50000, family: 70000 };
+const UTIL_BASE = { single:  8500, couple: 14000, family: 21500 };
+const COMM_BASE = { single:  6500, couple: 12000, family: 14000 };
+
+const HINTS = {
+  rent:      '家賃は手取りの30%以内が目安。更新時に交渉または引越し検討を。',
+  food:      '自炊を週4回以上にすると月5,000〜10,000円削減可能。冷凍活用も有効。',
+  utilities: '電力会社の切り替えで年間5,000〜15,000円節約できるケースも。',
+  comm:      '格安SIMへ切り替えると月2,000〜5,000円削減。ネットは光回線を比較して。',
+  transport: '定期代は会社支給を最大活用。自転車通勤で交通費ゼロも選択肢に。',
+  daily:     'まとめ買い・業務スーパー活用で日用品を10〜20%削減できます。',
+  leisure:   '月初に「娯楽予算」を現金で確保すると使いすぎ防止に効果的。',
+  savings:   '先取り貯蓄が鉄則。給料日に自動振替設定をするだけで継続できます。',
+  free:      '余剰は生活防衛資金（手取り3〜6ヵ月分）が貯まるまで優先的に積み立てを。',
+};
+
+/* =====================================================
+   状態管理
+===================================================== */
+let incomeType    = 'gross';
+let chartInstance = null;
+let lastDiagnosis = null;
+
+/* =====================================================
+   手取り変換
+===================================================== */
+function grossToNet(gross) {
+  let ratio;
+  if      (gross <= 300)  ratio = 0.80;
+  else if (gross <= 600)  ratio = 0.78;
+  else if (gross <= 1000) ratio = 0.75;
+  else                    ratio = 0.72;
+  return gross * ratio;
+}
+
+function calcNetAnnual(incomeVal, incomeTypeVal, employment) {
+  let netAnnual = incomeTypeVal === 'gross' ? grossToNet(incomeVal) : incomeVal;
+  if (employment === 'freelance') netAnnual *= 0.95;
+  return netAnnual;
+}
+
+function setIncomeType(type) {
+  incomeType = type;
+  document.getElementById('btn-gross').classList.toggle('active', type === 'gross');
+  document.getElementById('btn-net').classList.toggle('active',   type === 'net');
+}
+
+/* =====================================================
+   診断ロジック
+===================================================== */
+function diagnose() {
+  const incomeInput = document.getElementById('income-input');
+  const prefSelect  = document.getElementById('prefecture-select');
+  const incomeError = document.getElementById('income-error');
+  const prefError   = document.getElementById('pref-error');
+
+  let valid = true;
+  const incomeVal = parseFloat(incomeInput.value);
+  if (!incomeVal || incomeVal <= 0) { incomeError.style.display = 'block'; valid = false; }
+  else                               { incomeError.style.display = 'none'; }
+  if (!prefSelect.value)             { prefError.style.display = 'block';  valid = false; }
+  else                               { prefError.style.display = 'none'; }
+  if (!valid) return;
+
+  const employment = document.querySelector('input[name="employment"]:checked').value;
+  const prefecture = prefSelect.value;
+  const family     = document.querySelector('input[name="family"]:checked').value;
+
+  const netAnnual  = calcNetAnnual(incomeVal, incomeType, employment);
+  const netMonthly = Math.round(netAnnual * 10000 / 12);
+
+  const rentRatio = RENT_RATIO[prefecture] || 0.22;
+  const rent      = Math.round(netMonthly * rentRatio / 1000) * 1000;
+  const food      = FOOD_BASE[family];
+  const utilities = UTIL_BASE[family];
+  const comm      = COMM_BASE[family];
+  const transport = 20000;
+  const daily     = Math.round(netMonthly * 0.05 / 100) * 100;
+  const leisure   = Math.round(netMonthly * 0.08 / 100) * 100;
+  const savings   = Math.round(netMonthly * 0.20 / 100) * 100;
+  const free      = netMonthly - (rent + food + utilities + comm + transport + daily + leisure + savings);
+
+  renderResult({ netMonthly, rent, food, utilities, comm, transport, daily, leisure, savings, free,
+                 incomeVal, netAnnual, employment, prefecture, family });
+}
+
+/* =====================================================
+   結果描画
+===================================================== */
+function fmt(n) { return n.toLocaleString('ja-JP') + '円'; }
+
+function renderResult(d) {
+  document.getElementById('res-monthly').textContent = fmt(d.netMonthly);
+
+  const items = [
+    { key: 'rent',      label: '推奨家賃',     val: d.rent,      hint: HINTS.rent      },
+    { key: 'food',      label: '食費',         val: d.food,      hint: HINTS.food      },
+    { key: 'utilities', label: '光熱費',       val: d.utilities, hint: HINTS.utilities },
+    { key: 'comm',      label: '通信費',       val: d.comm,      hint: HINTS.comm      },
+    { key: 'transport', label: '交通費',       val: d.transport, hint: HINTS.transport },
+    { key: 'daily',     label: '日用品・雑費', val: d.daily,     hint: HINTS.daily     },
+    { key: 'leisure',   label: '娯楽・外食',   val: d.leisure,   hint: HINTS.leisure   },
+    { key: 'savings',   label: '貯蓄推奨額',   val: d.savings,   hint: HINTS.savings   },
+  ];
+
+  const tbody = document.getElementById('breakdown-body');
+  tbody.innerHTML = '';
+  items.forEach(item => {
+    tbody.insertAdjacentHTML('beforeend', `
+      <tr>
+        <td class="item-name">${item.label}</td>
+        <td class="item-amount" style="text-align:right;">${fmt(item.val)}</td>
+      </tr>
+      <tr class="hint-row">
+        <td colspan="2" class="item-hint">💡 ${item.hint}</td>
+      </tr>
+    `);
+  });
+
+  const freeClass = d.free >= 0 ? 'row-free' : 'row-surplus';
+  const freeLabel = d.free >= 0 ? '残り（自由費）' : '収支不足（赤字リスク）';
+  const freeHint  = d.free >= 0 ? HINTS.free : '⚠️ 収支がマイナスです。家賃・食費・娯楽費の見直しを優先しましょう。';
+  tbody.insertAdjacentHTML('beforeend', `
+    <tr class="${freeClass}">
+      <td class="item-name"><strong>${freeLabel}</strong></td>
+      <td class="item-amount" style="text-align:right;"><strong>${fmt(d.free)}</strong></td>
+    </tr>
+    <tr class="hint-row">
+      <td colspan="2" class="item-hint">💡 ${freeHint}</td>
+    </tr>
+  `);
+
+  renderChart(d);
+
+  // シミュレーションカードをリセット・表示
+  lastDiagnosis = d;
+  document.getElementById('income-up-card').style.display   = 'block';
+  document.getElementById('savings-sim-card').style.display = 'block';
+  document.getElementById('income-up-result').innerHTML   = '';
+  document.getElementById('savings-sim-result').innerHTML = '';
+  document.getElementById('tensyoku-link').style.display    = 'none';
+  document.getElementById('savings-cta-row').style.display  = 'none';
+  ['50','100','150'].forEach(n => document.getElementById(`up-btn-${n}`).classList.remove('active'));
+  ['rent','sim','both'].forEach(t => document.getElementById(`save-btn-${t}`).classList.remove('active'));
+
+  // URLにパラメーターを反映
+  const params = new URLSearchParams({ i: d.incomeVal, t: incomeType, e: d.employment, p: d.prefecture, f: d.family });
+  history.replaceState(null, '', `?${params.toString()}`);
+
+  // 表示アニメーション
+  const section = document.getElementById('result-section');
+  section.style.display = 'none';
+  void section.offsetHeight;
+  section.style.display = 'block';
+  setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+}
+
+function renderChart(d) {
+  const ctx = document.getElementById('budgetChart').getContext('2d');
+  if (chartInstance) chartInstance.destroy();
+  chartInstance = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['家賃','食費','光熱費','通信費','交通費','日用品','娯楽','貯蓄','自由費'],
+      datasets: [{
+        data: [d.rent, d.food, d.utilities, d.comm, d.transport, d.daily, d.leisure, d.savings, Math.max(0, d.free)],
+        backgroundColor: ['#2a9d8f','#57c4b7','#76ccc5','#99d8d3','#e9c46a','#f4a261','#e76f51','#264653','#a8dadc'],
+        borderWidth: 2,
+        borderColor: '#fff',
+      }]
+    },
+    options: {
+      cutout: '60%',
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 10, boxWidth: 14 } },
+        tooltip: { callbacks: { label: ctx => `${ctx.label}：${ctx.parsed.toLocaleString()}円` } }
+      }
+    }
+  });
+}
+
+/* =====================================================
+   コピー機能
+===================================================== */
+function copyResult() {
+  if (!lastDiagnosis) return;
+  const d = lastDiagnosis;
+  const pref    = document.getElementById('prefecture-select');
+  const empLabel = { employee:'会社員', civil:'公務員', freelance:'フリーランス' }[d.employment];
+  const famLabel = { single:'単身', couple:'2人暮らし', family:'子あり（3人以上）' }[d.family];
+
+  const rows = document.querySelectorAll('#breakdown-body tr:not(.hint-row)');
+  const lines = [];
+  rows.forEach(tr => {
+    const cells = tr.querySelectorAll('td');
+    if (cells.length === 2) lines.push(`${cells[0].textContent.trim()}：${cells[1].textContent.trim()}`);
+  });
+
+  const text = [
+    '【生活費シミュレーション結果】',
+    `年収：${d.incomeVal}万円（${incomeType === 'gross' ? '額面' : '手取り'}）`,
+    `雇用形態：${empLabel}`,
+    `居住地：${pref.options[pref.selectedIndex].text}`,
+    `家族構成：${famLabel}`,
+    `手取り月収：${fmt(d.netMonthly)}`,
+    '---',
+    ...lines,
+    '---',
+    `診断日：${new Date().toLocaleDateString('ja-JP')}`,
+    'Powered by Clarix 生活費シミュレーター',
+  ].join('\n');
+
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = '✓ コピーしました！';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.innerHTML = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>診断結果をコピー`;
+      btn.classList.remove('copied');
+    }, 2500);
+  }).catch(() => alert('クリップボードへのコピーに失敗しました。'));
+}
+
+/* =====================================================
+   X シェア
+===================================================== */
+function shareOnX() {
+  if (!lastDiagnosis) return;
+  const d       = lastDiagnosis;
+  const pref    = document.getElementById('prefecture-select');
+  const prefName = pref.options[pref.selectedIndex].text;
+  const famLabel = { single:'一人暮らし', couple:'2人暮らし', family:'子あり' }[d.family];
+  const text = `${d.incomeVal}万円・${prefName}・${famLabel}の生活費診断結果\n\n手取り月収：${fmt(d.netMonthly)}\n推奨家賃：${fmt(d.rent)}\n推奨貯蓄：${fmt(d.savings)}/月\n\n#生活費シミュレーター #家計管理`;
+  const url  = buildShareURL();
+  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank', 'noopener');
+}
+
+/* =====================================================
+   URL シェア
+===================================================== */
+function buildShareURL() {
+  if (!lastDiagnosis) return location.href;
+  const d = lastDiagnosis;
+  const params = new URLSearchParams({ i: d.incomeVal, t: incomeType, e: d.employment, p: d.prefecture, f: d.family });
+  return `${location.origin}${location.pathname}?${params.toString()}`;
+}
+
+function shareURL() {
+  navigator.clipboard.writeText(buildShareURL()).then(() => {
+    const btn = document.getElementById('url-share-btn');
+    const orig = btn.innerHTML;
+    btn.textContent = '✓ URLをコピーしました！';
+    setTimeout(() => { btn.innerHTML = orig; }, 2500);
+  });
+}
+
+/* =====================================================
+   年収アップシミュレーション
+===================================================== */
+function calcIncomeUp(deltaMan) {
+  if (!lastDiagnosis) return;
+  const d = lastDiagnosis;
+  ['50','100','150'].forEach(n => document.getElementById(`up-btn-${n}`).classList.remove('active'));
+  document.getElementById(`up-btn-${deltaMan}`).classList.add('active');
+
+  const newNet      = calcNetAnnual(d.incomeVal + deltaMan, incomeType, d.employment);
+  const newMonthly  = Math.round(newNet * 10000 / 12);
+  const newSavings  = Math.round(newMonthly * 0.20 / 100) * 100;
+  const deltaMonthly = newMonthly - d.netMonthly;
+  const deltaSavings = newSavings - d.savings;
+
+  document.getElementById('income-up-result').innerHTML = `
+    <div class="sim-result-box">
+      <div class="sim-main">手取り月収 ＋${fmt(deltaMonthly)} → ${fmt(newMonthly)}</div>
+      <div class="sim-sub">
+        推奨貯蓄 ＋${fmt(deltaSavings)}/月（年間 ＋${fmt(deltaSavings * 12)}）<br>
+        自由に使えるお金が月 ＋${fmt(deltaMonthly)} 増えます
+      </div>
+    </div>
+  `;
+  document.getElementById('tensyoku-link').style.display = 'flex';
+}
+
+/* =====================================================
+   節約シミュレーション
+===================================================== */
+function calcSaving(type) {
+  if (!lastDiagnosis) return;
+  ['rent','sim','both'].forEach(t => document.getElementById(`save-btn-${t}`).classList.remove('active'));
+  document.getElementById(`save-btn-${type}`).classList.add('active');
+
+  const rentSaving = type === 'sim'  ? 0     : 10000;
+  const simSaving  = type === 'rent' ? 0     : 3000;
+  const monthly    = rentSaving + simSaving;
+  const yearly     = monthly * 12;
+
+  const detail = {
+    rent: '家賃を1万円下げると年間120,000円の節約。更新時に大家へ交渉 or 引越しを検討。',
+    sim:  '格安SIMに切り替えると月〜3,000円削減。年間36,000円・10年で36万円の差。',
+    both: '家賃▼1万円＋格安SIM切替で月13,000円節約。年間156,000円・10年で156万円の差に。',
+  }[type];
+
+  document.getElementById('savings-sim-result').innerHTML = `
+    <div class="sim-result-box">
+      <div class="sim-main">年間 ${fmt(yearly)} 節約できます</div>
+      <div class="sim-sub">${detail}</div>
+    </div>
+  `;
+
+  const ctaRow = document.getElementById('savings-cta-row');
+  ctaRow.style.display = (type === 'both' || type === 'sim' || type === 'rent') ? 'flex' : 'none';
+}
+
+/* =====================================================
+   年収別早見表 生成（SEO用静的コンテンツ）
+===================================================== */
+function generateIncomeTable() {
+  const incomes = [200, 250, 300, 350, 400, 450, 500, 550, 600, 700, 800, 1000, 1200];
+  const tbody   = document.getElementById('income-table-body');
+  incomes.forEach(inc => {
+    const net     = grossToNet(inc);
+    const monthly = Math.round(net * 10000 / 12);
+    const tokyo   = Math.round(monthly * 0.33 / 1000) * 1000;
+    const osaka   = Math.round(monthly * 0.30 / 1000) * 1000;
+    const local   = Math.round(monthly * 0.21 / 1000) * 1000;
+    tbody.insertAdjacentHTML('beforeend', `
+      <tr>
+        <td class="col-income">${inc}万円</td>
+        <td>${monthly.toLocaleString()}円</td>
+        <td>${tokyo.toLocaleString()}円</td>
+        <td>${osaka.toLocaleString()}円</td>
+        <td>${local.toLocaleString()}円</td>
+      </tr>
+    `);
+  });
+}
+
+/* =====================================================
+   URLパラメーターから自動復元
+===================================================== */
+function initFromURL() {
+  const p = new URLSearchParams(location.search);
+  if (!p.get('i')) return;
+  document.getElementById('income-input').value = p.get('i');
+  setIncomeType(p.get('t') || 'gross');
+  const empEl = document.querySelector(`input[name="employment"][value="${p.get('e') || 'employee'}"]`);
+  if (empEl) empEl.checked = true;
+  const prefEl = document.getElementById('prefecture-select');
+  if (p.get('p')) prefEl.value = p.get('p');
+  const famEl = document.querySelector(`input[name="family"][value="${p.get('f') || 'single'}"]`);
+  if (famEl) famEl.checked = true;
+  if (p.get('i') && p.get('p')) diagnose();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  generateIncomeTable();
+  initFromURL();
+});
+</script>
+</body>
+</html>

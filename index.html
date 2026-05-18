@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clarix（クラリックス）| アイデアを、形に。</title>
+  <meta name="description" content="Clarixは個人開発・Webツール・コンテンツで日常をちょっと便利にする個人開発スタジオです。">
+  <style>
+    /* ===== リセット・変数 ===== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --black:      #0D0D0D;
+      --dark-grey:  #404040;
+      --mid-grey:   #737373;
+      --light-grey: #F4F4F4;
+      --border:     #E0E0E0;
+      --white:      #FFFFFF;
+      --max-w:      1100px;
+      --font:       system-ui, -apple-system, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Yu Gothic', sans-serif;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--white);
+      color: var(--black);
+      line-height: 1.7;
+      font-size: 16px;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    img {
+      max-width: 100%;
+      display: block;
+    }
+
+    /* ===== ナビゲーション ===== */
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 0 32px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav__logo {
+      display: flex;
+      align-items: center;
+      color: var(--black);
+    }
+
+    .nav__links {
+      display: flex;
+      gap: 36px;
+      list-style: none;
+    }
+
+    .nav__links a {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--black);
+      transition: text-decoration 0.1s;
+      letter-spacing: 0.1px;
+    }
+
+    .nav__links a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 640px) {
+      .nav {
+        padding: 0 20px;
+      }
+      .nav__links {
+        display: none;
+      }
+    }
+
+    /* ===== ヒーローセクション ===== */
+    .hero {
+      background: var(--black);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 140px 24px 100px;
+    }
+
+    .hero__inner {
+      max-width: 720px;
+    }
+
+    .hero__logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--white);
+      margin-bottom: 56px;
+    }
+
+    .hero__title {
+      font-size: clamp(38px, 6vw, 56px);
+      font-weight: 800;
+      color: var(--white);
+      letter-spacing: -1.5px;
+      line-height: 1.1;
+      margin-bottom: 24px;
+    }
+
+    .hero__sub {
+      font-size: 18px;
+      color: var(--mid-grey);
+      line-height: 1.75;
+      margin-bottom: 48px;
+    }
+
+    .hero__cta {
+      display: inline-block;
+      background: var(--white);
+      color: var(--black);
+      font-size: 15px;
+      font-weight: 700;
+      padding: 14px 40px;
+      border-radius: 4px;
+      transition: opacity 0.2s;
+      letter-spacing: 0.2px;
+    }
+
+    .hero__cta:hover {
+      opacity: 0.85;
+    }
+
+    /* ===== 共通セクション ===== */
+    .section {
+      padding: 100px 32px;
+    }
+
+    .section__inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+    }
+
+    .section__label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--mid-grey);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .section__title {
+      font-size: clamp(28px, 4vw, 40px);
+      font-weight: 800;
+      letter-spacing: -0.8px;
+      color: var(--black);
+      margin-bottom: 12px;
+    }
+
+    .section__sub {
+      font-size: 16px;
+      color: var(--mid-grey);
+      margin-bottom: 64px;
+    }
+
+    /* ===== プロダクトセクション ===== */
+    #products {
+      background: var(--white);
+    }
+
+    .products__grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+
+    @media (max-width: 720px) {
+      .products__grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .product-card {
+      background: var(--white);
+      border: 1.5px solid var(--black);
+      border-radius: 4px;
+      padding: 40px 36px;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .product-card:hover {
+      background: var(--black);
+      color: var(--white);
+    }
+
+    .product-card:hover .product-card__desc {
+      color: var(--mid-grey);
+    }
+
+    .product-card:hover .product-card__name {
+      color: var(--white);
+    }
+
+    .product-card:hover .badge {
+      background: var(--dark-grey);
+      color: var(--white);
+    }
+
+    .product-card:hover .tag {
+      color: var(--mid-grey);
+      border-color: var(--dark-grey);
+      background: transparent;
+    }
+
+    .product-card:hover .btn-text {
+      color: var(--white);
+    }
+
+    .product-card__icon {
+      font-size: 32px;
+      margin-bottom: 24px;
+      display: block;
+    }
+
+    .product-card__badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 2px;
+      letter-spacing: 0.3px;
+      background: var(--black);
+      color: var(--white);
+    }
+
+    .product-card__name {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--black);
+      margin-bottom: 12px;
+      transition: color 0.2s;
+    }
+
+    .product-card__desc {
+      font-size: 15px;
+      color: var(--mid-grey);
+      line-height: 1.75;
+      margin-bottom: 20px;
+      transition: color 0.2s;
+    }
+
+    .product-card__tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 28px;
+    }
+
+    .tag {
+      font-size: 12px;
+      color: var(--mid-grey);
+      background: transparent;
+      border: 1px solid var(--border);
+      padding: 4px 12px;
+      border-radius: 2px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+
+    .btn-text {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--black);
+      text-decoration: underline;
+      transition: color 0.2s;
+    }
+
+    /* ===== コンテンツセクション ===== */
+    #content {
+      background: var(--light-grey);
+    }
+
+    #content .section__title {
+      color: var(--black);
+    }
+
+    .articles__grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 860px) {
+      .articles__grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .article-card {
+      background: var(--white);
+      border: 1.5px solid var(--black);
+      border-radius: 4px;
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .article-card:hover {
+      background: var(--black);
+      color: var(--white);
+    }
+
+    .article-card:hover .article-card__title {
+      color: var(--white);
+    }
+
+    .article-card:hover .article-card__date {
+      color: var(--mid-grey);
+    }
+
+    .article-card:hover .article-card__link {
+      color: var(--white);
+    }
+
+    .article-card:hover .article-card__tag {
+      background: var(--dark-grey);
+      color: var(--white);
+    }
+
+    .article-card__tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .article-card__tag {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--white);
+      background: var(--black);
+      padding: 3px 10px;
+      border-radius: 2px;
+      letter-spacing: 0.2px;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .article-card__title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--black);
+      letter-spacing: -0.3px;
+      line-height: 1.6;
+      margin-bottom: 20px;
+      flex-grow: 1;
+      transition: color 0.2s;
+    }
+
+    .article-card__footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: auto;
+    }
+
+    .article-card__date {
+      font-size: 12px;
+      color: var(--mid-grey);
+      transition: color 0.2s;
+    }
+
+    .article-card__link {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--black);
+      text-decoration: underline;
+      transition: color 0.2s;
+    }
+
+    /* ===== Aboutセクション ===== */
+    #about {
+      background: var(--black);
+    }
+
+    #about .section__label {
+      color: var(--mid-grey);
+    }
+
+    #about .section__title {
+      color: var(--white);
+    }
+
+    .about__grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: start;
+    }
+
+    @media (max-width: 720px) {
+      .about__grid {
+        grid-template-columns: 1fr;
+        gap: 48px;
+      }
+    }
+
+    .about__text p {
+      font-size: 15px;
+      color: var(--mid-grey);
+      line-height: 1.9;
+      margin-bottom: 16px;
+    }
+
+    .about__text p:last-child {
+      margin-bottom: 0;
+    }
+
+    .about__stats {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      border: 1px solid var(--dark-grey);
+    }
+
+    .stat-item {
+      padding: 32px 36px;
+      border-bottom: 1px solid var(--dark-grey);
+    }
+
+    .stat-item:last-child {
+      border-bottom: none;
+    }
+
+    .stat-item__number {
+      font-size: 48px;
+      font-weight: 800;
+      color: var(--white);
+      letter-spacing: -1.5px;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .stat-item__number span.unit {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--mid-grey);
+      margin-left: 4px;
+    }
+
+    .stat-item__label {
+      font-size: 13px;
+      color: var(--mid-grey);
+      font-weight: 500;
+    }
+
+    /* ===== フッター ===== */
+    .footer {
+      background: var(--black);
+      border-top: 1px solid var(--dark-grey);
+      padding: 56px 32px;
+    }
+
+    .footer__inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      text-align: center;
+    }
+
+    .footer__logo {
+      color: var(--white);
+    }
+
+    .footer__copy {
+      font-size: 13px;
+      color: var(--mid-grey);
+    }
+
+    .footer__email a {
+      font-size: 13px;
+      color: var(--mid-grey);
+      text-decoration: underline;
+      transition: color 0.2s;
+    }
+
+    .footer__email a:hover {
+      color: var(--white);
+    }
+
+    /* ===== スクロールトップ ===== */
+    .scroll-top {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      width: 44px;
+      height: 44px;
+      background: var(--black);
+      color: var(--white);
+      border: 1.5px solid var(--dark-grey);
+      border-radius: 2px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s, border-color 0.2s;
+      z-index: 99;
+    }
+
+    .scroll-top.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .scroll-top:hover {
+      border-color: var(--white);
+    }
+
+    /* ===== モバイル対応 ===== */
+    @media (max-width: 640px) {
+      .section {
+        padding: 80px 20px;
+      }
+
+      .hero {
+        padding: 120px 20px 80px;
+      }
+
+      .hero__title {
+        letter-spacing: -1px;
+      }
+
+      .product-card {
+        padding: 32px 24px;
+      }
+    }
+  </style>
+</head>
+<body id="top">
+
+  <!-- ===== ナビゲーション ===== -->
+  <header>
+    <nav class="nav" id="nav">
+      <a href="#top" class="nav__logo" aria-label="Clarix トップへ">
+        <img src="../../assets/logo_light.svg" alt="Clarix" height="36" style="width: auto; display: block;">
+      </a>
+      <ul class="nav__links">
+        <li><a href="#products">プロダクト</a></li>
+        <li><a href="#content">コンテンツ</a></li>
+        <li><a href="#about">About</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- ===== ヒーロー ===== -->
+  <section class="hero">
+    <div class="hero__inner">
+      <div class="hero__logo" aria-hidden="true">
+        <svg width="160" height="44" viewBox="0 0 130 36" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="18,2 34,18 18,34 2,18" fill="currentColor"/>
+          <polygon points="18,18 34,18 18,34 2,18" fill="currentColor" opacity="0.45"/>
+          <text x="44" y="23" font-family="system-ui,-apple-system,sans-serif" font-size="20" font-weight="700" letter-spacing="-0.3" fill="currentColor">Clarix</text>
+        </svg>
+      </div>
+      <h1 class="hero__title">アイデアを、形に。</h1>
+      <p class="hero__sub">
+        個人開発・Webツール・コンテンツで、<br>
+        日常をちょっと便利に。
+      </p>
+      <a href="#products" class="hero__cta">プロダクトを見る</a>
+    </div>
+  </section>
+
+  <!-- ===== プロダクト ===== -->
+  <section class="section" id="products">
+    <div class="section__inner">
+      <p class="section__label">Products</p>
+      <h2 class="section__title">プロダクト</h2>
+      <p class="section__sub">日常の不便を解消するアプリとWebツールをつくっています。</p>
+
+      <div class="products__grid">
+
+        <!-- カード1: AI漫画コンシェルジュ -->
+        <article class="product-card">
+          <span class="product-card__icon">📚</span>
+          <div class="product-card__badges">
+            <span class="badge">Android</span>
+            <span class="badge">近日公開</span>
+          </div>
+          <h3 class="product-card__name">AI漫画コンシェルジュ</h3>
+          <p class="product-card__desc">
+            「今夜何を読む？」をAIが解決。気分を入力するとあなたのライブラリから最適な1冊を提案。ジャンルタグ自動付与・読書統計も搭載。
+          </p>
+          <div class="product-card__tags">
+            <span class="tag">AI推薦</span>
+            <span class="tag">ジャンル自動タグ</span>
+            <span class="tag">読書統計</span>
+          </div>
+        </article>
+
+        <!-- カード2: 冷蔵庫マネージャー -->
+        <article class="product-card">
+          <span class="product-card__icon">🧊</span>
+          <div class="product-card__badges">
+            <span class="badge">App（Android）</span>
+            <span class="badge">近日公開</span>
+          </div>
+          <h3 class="product-card__name">冷蔵庫マネージャー</h3>
+          <p class="product-card__desc">
+            食材の賞味期限管理・買い物リスト・AIレシピ提案がひとつに。食品ロスを減らす冷蔵庫管理アプリ。
+          </p>
+          <div class="product-card__tags">
+            <span class="tag">賞味期限通知</span>
+            <span class="tag">AIレシピ</span>
+            <span class="tag">栄養分析</span>
+          </div>
+        </article>
+
+        <!-- カード3: 生活費シミュレーター -->
+        <article class="product-card">
+          <span class="product-card__icon">📊</span>
+          <div class="product-card__badges">
+            <span class="badge">無料</span>
+            <span class="badge">Webツール</span>
+          </div>
+          <h3 class="product-card__name">生活費シミュレーター</h3>
+          <p class="product-card__desc">
+            年収・居住地・家族構成を入力するだけで、推奨家賃・生活費・貯蓄額を自動計算。全47都道府県対応。
+          </p>
+          <div class="product-card__tags">
+            <span class="tag">全47都道府県対応</span>
+            <span class="tag">グラフ表示</span>
+            <span class="tag">無料</span>
+          </div>
+          <a href="../life-budget/index.html" class="btn-text">ツールを使う →</a>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== コンテンツ ===== -->
+  <section class="section" id="content">
+    <div class="section__inner">
+      <p class="section__label">Content</p>
+      <h2 class="section__title">コンテンツ</h2>
+      <p class="section__sub">Note で技術・開発・ライフハックを発信しています。</p>
+
+      <div class="articles__grid">
+
+        <article class="article-card">
+          <div class="article-card__tags">
+            <span class="article-card__tag">個人開発</span>
+            <span class="article-card__tag">React Native</span>
+          </div>
+          <h3 class="article-card__title">AIと一緒に1日で冷蔵庫管理アプリを作った話</h3>
+          <div class="article-card__footer">
+            <span class="article-card__date">2026.05.17</span>
+            <a href="#" class="article-card__link">Noteで読む →</a>
+          </div>
+        </article>
+
+        <article class="article-card">
+          <div class="article-card__tags">
+            <span class="article-card__tag">転職</span>
+            <span class="article-card__tag">キャリア</span>
+          </div>
+          <h3 class="article-card__title">初めての転職完全ガイド｜7ステップで理想の職場へ</h3>
+          <div class="article-card__footer">
+            <span class="article-card__date">2026.05.14</span>
+            <a href="#" class="article-card__link">Noteで読む →</a>
+          </div>
+        </article>
+
+        <article class="article-card">
+          <div class="article-card__tags">
+            <span class="article-card__tag">AI活用</span>
+            <span class="article-card__tag">転職</span>
+          </div>
+          <h3 class="article-card__title">AI活用で30分で書く職務経歴書の書き方</h3>
+          <div class="article-card__footer">
+            <span class="article-card__date">2026.05.14</span>
+            <a href="#" class="article-card__link">Noteで読む →</a>
+          </div>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== About ===== -->
+  <section class="section" id="about">
+    <div class="section__inner">
+      <div class="about__grid">
+
+        <div class="about__text">
+          <p class="section__label">About</p>
+          <h2 class="section__title">Clarixについて</h2>
+          <p>
+            Clarixは、"使いやすいものをつくる" を信念に活動する個人開発スタジオです。
+          </p>
+          <p>
+            アプリ・Webツール・コンテンツを通じて、日常の小さな不便を解消するプロダクトを届けます。
+          </p>
+          <p>
+            すべてのプロダクトは「シンプルで、すぐ使えて、ちゃんと動く」を原則に設計しています。
+          </p>
+        </div>
+
+        <div class="about__stats">
+          <div class="stat-item">
+            <div class="stat-item__number">3<span class="unit">本</span></div>
+            <div class="stat-item__label">プロダクト数</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-item__number">4<span class="unit">本</span></div>
+            <div class="stat-item__label">公開コンテンツ</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-item__number" style="font-size:22px; letter-spacing:-0.5px;">iOS / Android / Web</div>
+            <div class="stat-item__label">対応プラットフォーム</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== フッター ===== -->
+  <footer class="footer">
+    <div class="footer__inner">
+      <div class="footer__logo">
+        <svg width="110" height="30" viewBox="0 0 130 36" xmlns="http://www.w3.org/2000/svg" aria-label="Clarix">
+          <polygon points="18,2 34,18 18,34 2,18" fill="currentColor"/>
+          <polygon points="18,18 34,18 18,34 2,18" fill="currentColor" opacity="0.45"/>
+          <text x="44" y="23" font-family="system-ui,-apple-system,sans-serif" font-size="20" font-weight="700" letter-spacing="-0.3" fill="currentColor">Clarix</text>
+        </svg>
+      </div>
+      <p class="footer__copy">© 2026 Clarix. All rights reserved.</p>
+      <div class="footer__email">
+        <a href="mailto:yoshi0711private@outlook.jp">yoshi0711private@outlook.jp</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===== スクロールトップボタン ===== -->
+  <button class="scroll-top" id="scrollTop" aria-label="トップへ戻る">↑</button>
+
+  <!-- ===== JavaScript ===== -->
+  <script>
+    // スクロールトップボタン
+    const scrollTopBtn = document.getElementById('scrollTop');
+    window.addEventListener('scroll', function () {
+      if (window.scrollY > 400) {
+        scrollTopBtn.classList.add('visible');
+      } else {
+        scrollTopBtn.classList.remove('visible');
+      }
+    }, { passive: true });
+
+    scrollTopBtn.addEventListener('click', function () {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // アンカーリンクのスムーズスクロール（ナビ高さ分のオフセット）
+    document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
+      anchor.addEventListener('click', function (e) {
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          e.preventDefault();
+          const offset = 72;
+          const top = target.getBoundingClientRect().top + window.scrollY - offset;
+          window.scrollTo({ top: top, behavior: 'smooth' });
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>
