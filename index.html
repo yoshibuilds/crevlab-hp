@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Clarix（クラリックス）| アイデアを、形に。</title>
-  <meta name="description" content="Clarixは個人開発・Webツール・コンテンツで日常をちょっと便利にする個人開発スタジオです。">
+  <title>Crevlab（クレブラブ）| アイデアを、形に。</title>
+  <meta name="description" content="Crevlabは個人開発・Webツール・コンテンツで日常をちょっと便利にする個人開発スタジオです。">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'><polygon points='18,2 34,18 18,34 2,18' fill='%230D0D0D'/><polygon points='18,18 34,18 18,34 2,18' fill='%230D0D0D' opacity='0.45'/></svg>">
   <style>
     /* ===== リセット・変数 ===== */
@@ -191,11 +191,17 @@
 
     .products__grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 24px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
     }
 
-    @media (max-width: 720px) {
+    @media (max-width: 1000px) {
+      .products__grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
       .products__grid {
         grid-template-columns: 1fr;
       }
@@ -258,6 +264,14 @@
       letter-spacing: 0.3px;
       background: var(--black);
       color: var(--white);
+    }
+
+    .badge--live {
+      background: #16a34a;
+    }
+
+    .product-card:hover .badge--live {
+      background: #15803d;
     }
 
     .product-card__name {
@@ -684,8 +698,18 @@
   <!-- ===== ナビゲーション ===== -->
   <header>
     <nav class="nav" id="nav">
-      <a href="#top" class="nav__logo" aria-label="Clarix トップへ">
-        <img src="../../assets/logo_light.svg" alt="Clarix" height="36" style="width: auto; display: block;">
+      <a href="#top" class="nav__logo" aria-label="Crevlab トップへ">
+        <svg width="96" height="28" viewBox="0 0 300 72" xmlns="http://www.w3.org/2000/svg" aria-label="crevlab">
+          <circle cx="36" cy="36" r="25" fill="none" stroke="url(#cg-nav)" stroke-width="8" stroke-linecap="round" stroke-dasharray="118 39" stroke-dashoffset="20"/>
+          <circle cx="54" cy="18" r="4" fill="#6366f1"/>
+          <text x="84" y="50" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-weight="600" font-size="40" fill="#0f172a">crev<tspan fill="#6366f1">lab</tspan></text>
+          <defs>
+            <linearGradient id="cg-nav" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#6366f1"/>
+              <stop offset="100%" stop-color="#0ea5e9"/>
+            </linearGradient>
+          </defs>
+        </svg>
       </a>
       <ul class="nav__links">
         <li><a href="#products">プロダクト</a></li>
@@ -702,7 +726,7 @@
         <svg width="160" height="44" viewBox="0 0 130 36" xmlns="http://www.w3.org/2000/svg">
           <polygon points="18,2 34,18 18,34 2,18" fill="currentColor"/>
           <polygon points="18,18 34,18 18,34 2,18" fill="currentColor" opacity="0.45"/>
-          <text x="44" y="23" font-family="system-ui,-apple-system,sans-serif" font-size="20" font-weight="700" letter-spacing="-0.3" fill="currentColor">Clarix</text>
+          <text x="44" y="23" font-family="system-ui,-apple-system,sans-serif" font-size="20" font-weight="700" letter-spacing="-0.3" fill="currentColor">Crevlab</text>
         </svg>
       </div>
       <h1 class="hero__title">アイデアを、形に。</h1>
@@ -750,57 +774,49 @@
 
       <div class="products__grid">
 
-        <!-- カード1: StreamPicks -->
+        <!-- StreamPicks -->
         <article class="product-card">
           <span class="product-card__icon">🎬</span>
           <div class="product-card__badges">
+            <span class="badge badge--live">公開中</span>
             <span class="badge">無料</span>
-            <span class="badge">Webサービス</span>
           </div>
           <h3 class="product-card__name">StreamPicks</h3>
-          <p class="product-card__desc">
-            毎日更新。世界のトレンドから厳選した映画・ドラマ・漫画・アニメ・書籍のおすすめ2選を一覧表示。今日何を観る？読む？をサクッと解決。
-          </p>
+          <p class="product-card__desc">今日何を観る・読む？を即解決。世界トレンドから映画・漫画・書籍を毎日2本厳選して表示。</p>
           <div class="product-card__tags">
             <span class="tag">映画・ドラマ</span>
             <span class="tag">漫画・アニメ</span>
             <span class="tag">書籍</span>
-            <span class="tag">毎日更新</span>
           </div>
           <a href="./stream-picks/index.html" class="btn-text">今日のピックを見る →</a>
         </article>
 
-        <!-- カード2: 旅行コスパナビ -->
+        <!-- TravelPicks -->
         <article class="product-card">
-          <span class="product-card__icon">✈</span>
+          <span class="product-card__icon">✈️</span>
           <div class="product-card__badges">
+            <span class="badge badge--live">公開中</span>
             <span class="badge">無料</span>
-            <span class="badge">Webサービス</span>
           </div>
-          <h3 class="product-card__name">旅行コスパナビ</h3>
-          <p class="product-card__desc">
-            国内10大観光地の気候・混雑度・宿泊費を総合評価。月別ヒートマップで「いつどこに行けば安くて快適か」を一目で確認できる旅行計画ツール。
-          </p>
+          <h3 class="product-card__name">TravelPicks</h3>
+          <p class="product-card__desc">国内10大観光地をいつ・どこへ行けばコスパ最高か、月別ヒートマップで一目比較。</p>
           <div class="product-card__tags">
             <span class="tag">10大観光地</span>
-            <span class="tag">月別ヒートマップ</span>
-            <span class="tag">楽天トラベル連携</span>
+            <span class="tag">月別比較</span>
+            <span class="tag">楽天連携</span>
           </div>
           <a href="./travel-picks/index.html" class="btn-text">旅行先を探す →</a>
         </article>
 
-        <!-- カード3: gift-finder -->
+        <!-- GiftFinder -->
         <article class="product-card">
           <span class="product-card__icon">🎁</span>
           <div class="product-card__badges">
-            <span class="badge">無料</span>
+            <span class="badge badge--live">公開中</span>
             <span class="badge">AI搭載</span>
-            <span class="badge">Webサービス</span>
           </div>
-          <h3 class="product-card__name">gift-finder</h3>
-          <p class="product-card__desc">
-            相手の情報・予算・シーンを入力するだけで、AIがぴったりのプレゼントを5つ提案。Amazonの購入リンクと一言メッセージ文も自動生成。
-          </p>
+          <h3 class="product-card__name">GiftFinder</h3>
+          <p class="product-card__desc">相手・予算・シーンを入力するだけ。AIがプレゼント5案＋一言メッセージを即提案。</p>
           <div class="product-card__tags">
             <span class="tag">AI提案</span>
             <span class="tag">Amazon連携</span>
@@ -809,79 +825,71 @@
           <a href="./gift-finder/index.html" class="btn-text">プレゼントを探す →</a>
         </article>
 
-        <!-- カード4: 生活費シミュレーター -->
+        <!-- LifeBudget -->
         <article class="product-card">
           <span class="product-card__icon">📊</span>
           <div class="product-card__badges">
+            <span class="badge badge--live">公開中</span>
             <span class="badge">無料</span>
-            <span class="badge">Webツール</span>
           </div>
-          <h3 class="product-card__name">生活費シミュレーター</h3>
-          <p class="product-card__desc">
-            年収・居住地・家族構成を入力するだけで、推奨家賃・生活費・貯蓄額を自動計算。全47都道府県対応。
-          </p>
+          <h3 class="product-card__name">LifeBudget</h3>
+          <p class="product-card__desc">年収・居住地・家族構成を入力するだけ。推奨家賃・生活費・貯蓄額を全47都道府県で自動計算。</p>
           <div class="product-card__tags">
-            <span class="tag">全47都道府県対応</span>
+            <span class="tag">47都道府県対応</span>
             <span class="tag">グラフ表示</span>
-            <span class="tag">無料</span>
           </div>
-          <a href="./life-budget/index.html" class="btn-text">ツールを使う →</a>
+          <a href="./life-budget/index.html" class="btn-text">シミュレートする →</a>
         </article>
 
-        <!-- カード5: KIRU -->
+        <!-- KIRU -->
         <article class="product-card">
           <span class="product-card__icon">👗</span>
           <div class="product-card__badges">
-            <span class="badge">無料</span>
+            <span class="badge badge--live">公開中</span>
             <span class="badge">AI搭載</span>
-            <span class="badge">Webアプリ</span>
           </div>
           <h3 class="product-card__name">KIRU</h3>
-          <p class="product-card__desc">
-            クローゼットをAIで管理。服の写真を撮るだけでカテゴリ・色・シーズンを自動タグ付け。天気・シーンに合わせたコーデを毎日AIが提案。
-          </p>
+          <p class="product-card__desc">服の写真を撮るだけでAIが自動タグ付け。天気・シーンに合わせた今日のコーデをAIが毎日提案。</p>
           <div class="product-card__tags">
             <span class="tag">AIコーデ提案</span>
-            <span class="tag">写真タグ付け</span>
             <span class="tag">天気連動</span>
+            <span class="tag">ZOZO連携</span>
           </div>
           <a href="./kiru/index.html" class="btn-text">クローゼットを開く →</a>
         </article>
 
-        <!-- カード6: AI漫画コンシェルジュ -->
+        <!-- MangaPicks -->
         <article class="product-card">
           <span class="product-card__icon">📚</span>
           <div class="product-card__badges">
-            <span class="badge">Android</span>
-            <span class="badge">近日公開</span>
+            <span class="badge badge--live">公開中</span>
+            <span class="badge">AI搭載</span>
           </div>
-          <h3 class="product-card__name">AI漫画コンシェルジュ</h3>
-          <p class="product-card__desc">
-            「今夜何を読む？」をAIが解決。気分を入力するとあなたのライブラリから最適な1冊を提案。ジャンルタグ自動付与・読書統計も搭載。
-          </p>
+          <h3 class="product-card__name">MangaPicks</h3>
+          <p class="product-card__desc">「今夜何を読む？」をAIが解決。ライブラリに登録した漫画から気分・シーンに合う1冊をAIが提案。</p>
           <div class="product-card__tags">
             <span class="tag">AI推薦</span>
-            <span class="tag">ジャンル自動タグ</span>
+            <span class="tag">自動タグ付け</span>
             <span class="tag">読書統計</span>
           </div>
+          <a href="./manga-picks/index.html" class="btn-text">ライブラリを開く →</a>
         </article>
 
-        <!-- カード6: 冷蔵庫マネージャー -->
+        <!-- FreshBox -->
         <article class="product-card">
           <span class="product-card__icon">🧊</span>
           <div class="product-card__badges">
-            <span class="badge">App（Android）</span>
-            <span class="badge">近日公開</span>
+            <span class="badge badge--live">公開中</span>
+            <span class="badge">AI搭載</span>
           </div>
-          <h3 class="product-card__name">冷蔵庫マネージャー</h3>
-          <p class="product-card__desc">
-            食材の賞味期限管理・買い物リスト・AIレシピ提案がひとつに。食品ロスを減らす冷蔵庫管理アプリ。
-          </p>
+          <h3 class="product-card__name">FreshBox</h3>
+          <p class="product-card__desc">冷蔵庫の食材を登録すると賞味期限を通知。在庫から作れるレシピをAIが自動提案。食品ロスをゼロに。</p>
           <div class="product-card__tags">
-            <span class="tag">賞味期限通知</span>
+            <span class="tag">賞味期限管理</span>
             <span class="tag">AIレシピ</span>
-            <span class="tag">栄養分析</span>
+            <span class="tag">食品ロス削減</span>
           </div>
+          <a href="./fresh-box/index.html" class="btn-text">冷蔵庫を管理する →</a>
         </article>
 
       </div>
@@ -944,9 +952,9 @@
 
         <div class="about__text">
           <p class="section__label">About</p>
-          <h2 class="section__title">Clarixについて</h2>
+          <h2 class="section__title">Crevlabについて</h2>
           <p>
-            Clarixは、"使いやすいものをつくる" を信念に活動する個人開発スタジオです。
+            Crevlabは、"使いやすいものをつくる" を信念に活動する個人開発スタジオです。
           </p>
           <p>
             アプリ・Webツール・コンテンツを通じて、日常の小さな不便を解消するプロダクトを届けます。
@@ -958,7 +966,7 @@
 
         <div class="about__stats">
           <div class="stat-item">
-            <div class="stat-item__number">5<span class="unit">本</span></div>
+            <div class="stat-item__number">7<span class="unit">本</span></div>
             <div class="stat-item__label">公開Webサービス数</div>
           </div>
           <div class="stat-item">
@@ -989,13 +997,13 @@
   <footer class="footer">
     <div class="footer__inner">
       <div class="footer__logo">
-        <svg width="110" height="30" viewBox="0 0 130 36" xmlns="http://www.w3.org/2000/svg" aria-label="Clarix">
+        <svg width="110" height="30" viewBox="0 0 130 36" xmlns="http://www.w3.org/2000/svg" aria-label="Crevlab">
           <polygon points="18,2 34,18 18,34 2,18" fill="currentColor"/>
           <polygon points="18,18 34,18 18,34 2,18" fill="currentColor" opacity="0.45"/>
-          <text x="44" y="23" font-family="system-ui,-apple-system,sans-serif" font-size="20" font-weight="700" letter-spacing="-0.3" fill="currentColor">Clarix</text>
+          <text x="44" y="23" font-family="system-ui,-apple-system,sans-serif" font-size="20" font-weight="700" letter-spacing="-0.3" fill="currentColor">Crevlab</text>
         </svg>
       </div>
-      <p class="footer__copy">© 2026 Clarix. All rights reserved.</p>
+      <p class="footer__copy">© 2026 Crevlab. All rights reserved.</p>
     </div>
   </footer>
 

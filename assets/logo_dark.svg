@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 72" width="300" height="72">
+  <defs>
+    <linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#818cf8"/>
+      <stop offset="100%" stop-color="#22d3ee"/>
+    </linearGradient>
+    <filter id="glow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="300" height="72" fill="#0a0e1a"/>
+
+  <!-- C mark (r=25, center=(36,36)) -->
+  <!-- circ=157, visible=118, gap=39, offset=20 -->
+  <circle cx="36" cy="36" r="25"
+    fill="none"
+    stroke="url(#cg)"
+    stroke-width="8"
+    stroke-linecap="round"
+    stroke-dasharray="118 39"
+    stroke-dashoffset="20"/>
+
+  <!-- Accent dot at 1:30 position -->
+  <circle cx="54" cy="18" r="4"
+    fill="#818cf8"
+    filter="url(#glow)"/>
+
+  <!-- Wordmark: "clarix" -->
+  <text x="84" y="50"
+    font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
+    font-weight="600"
+    font-size="40"
+    fill="#f1f5f9">clar<tspan fill="#818cf8">ix</tspan></text>
+</svg>
