@@ -531,6 +531,103 @@
       color: var(--white);
     }
 
+    /* ===== 特徴ストリップ ===== */
+    .features-strip {
+      background: var(--light-grey);
+      border-bottom: 1px solid var(--border);
+      padding: 40px 32px;
+    }
+
+    .features-strip__inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+    }
+
+    @media (max-width: 640px) {
+      .features-strip__inner {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .feature-item__icon {
+      font-size: 28px;
+      flex-shrink: 0;
+    }
+
+    .feature-item__title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--black);
+      margin-bottom: 2px;
+    }
+
+    .feature-item__desc {
+      font-size: 12px;
+      color: var(--mid-grey);
+    }
+
+    /* ===== Note CTA ===== */
+    .note-cta {
+      background: var(--black);
+      padding: 80px 32px;
+      text-align: center;
+    }
+
+    .note-cta__inner {
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    .note-cta__label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--mid-grey);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .note-cta__title {
+      font-size: clamp(24px, 4vw, 36px);
+      font-weight: 800;
+      color: var(--white);
+      letter-spacing: -0.8px;
+      margin-bottom: 16px;
+    }
+
+    .note-cta__sub {
+      font-size: 15px;
+      color: var(--mid-grey);
+      line-height: 1.8;
+      margin-bottom: 36px;
+    }
+
+    .note-cta__btn {
+      display: inline-block;
+      border: 1.5px solid var(--white);
+      color: var(--white);
+      font-size: 14px;
+      font-weight: 700;
+      padding: 13px 36px;
+      border-radius: 4px;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .note-cta__btn:hover {
+      background: var(--white);
+      color: var(--black);
+    }
+
     /* ===== スクロールトップ ===== */
     .scroll-top {
       position: fixed;
@@ -610,12 +707,39 @@
       </div>
       <h1 class="hero__title">アイデアを、形に。</h1>
       <p class="hero__sub">
-        個人開発・Webツール・コンテンツで、<br>
-        日常をちょっと便利に。
+        AIを使って、日常をちょっと便利にする<br>
+        プロダクトをつくっています。
       </p>
       <a href="#products" class="hero__cta">プロダクトを見る</a>
     </div>
   </section>
+
+  <!-- ===== 特徴ストリップ ===== -->
+  <div class="features-strip">
+    <div class="features-strip__inner">
+      <div class="feature-item">
+        <span class="feature-item__icon">🤖</span>
+        <div>
+          <p class="feature-item__title">AIネイティブ</p>
+          <p class="feature-item__desc">全プロダクトにAIを組み込み</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <span class="feature-item__icon">📱</span>
+        <div>
+          <p class="feature-item__title">Android &amp; Web</p>
+          <p class="feature-item__desc">スマホ・ブラウザ両対応</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <span class="feature-item__icon">🆓</span>
+        <div>
+          <p class="feature-item__title">無料で使える</p>
+          <p class="feature-item__desc">基本機能はすべて無料</p>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- ===== プロダクト ===== -->
   <section class="section" id="products">
@@ -626,7 +750,85 @@
 
       <div class="products__grid">
 
-        <!-- カード1: AI漫画コンシェルジュ -->
+        <!-- カード1: StreamPicks -->
+        <article class="product-card">
+          <span class="product-card__icon">🎬</span>
+          <div class="product-card__badges">
+            <span class="badge">無料</span>
+            <span class="badge">Webサービス</span>
+          </div>
+          <h3 class="product-card__name">StreamPicks</h3>
+          <p class="product-card__desc">
+            毎日更新。世界のトレンドから厳選した映画・ドラマ・漫画・アニメ・書籍のおすすめ2選を一覧表示。今日何を観る？読む？をサクッと解決。
+          </p>
+          <div class="product-card__tags">
+            <span class="tag">映画・ドラマ</span>
+            <span class="tag">漫画・アニメ</span>
+            <span class="tag">書籍</span>
+            <span class="tag">毎日更新</span>
+          </div>
+          <a href="./stream-picks/index.html" class="btn-text">今日のピックを見る →</a>
+        </article>
+
+        <!-- カード2: 旅行コスパナビ -->
+        <article class="product-card">
+          <span class="product-card__icon">✈</span>
+          <div class="product-card__badges">
+            <span class="badge">無料</span>
+            <span class="badge">Webサービス</span>
+          </div>
+          <h3 class="product-card__name">旅行コスパナビ</h3>
+          <p class="product-card__desc">
+            国内10大観光地の気候・混雑度・宿泊費を総合評価。月別ヒートマップで「いつどこに行けば安くて快適か」を一目で確認できる旅行計画ツール。
+          </p>
+          <div class="product-card__tags">
+            <span class="tag">10大観光地</span>
+            <span class="tag">月別ヒートマップ</span>
+            <span class="tag">楽天トラベル連携</span>
+          </div>
+          <a href="./travel-picks/index.html" class="btn-text">旅行先を探す →</a>
+        </article>
+
+        <!-- カード3: gift-finder -->
+        <article class="product-card">
+          <span class="product-card__icon">🎁</span>
+          <div class="product-card__badges">
+            <span class="badge">無料</span>
+            <span class="badge">AI搭載</span>
+            <span class="badge">Webサービス</span>
+          </div>
+          <h3 class="product-card__name">gift-finder</h3>
+          <p class="product-card__desc">
+            相手の情報・予算・シーンを入力するだけで、AIがぴったりのプレゼントを5つ提案。Amazonの購入リンクと一言メッセージ文も自動生成。
+          </p>
+          <div class="product-card__tags">
+            <span class="tag">AI提案</span>
+            <span class="tag">Amazon連携</span>
+            <span class="tag">メッセージ生成</span>
+          </div>
+          <a href="./gift-finder/index.html" class="btn-text">プレゼントを探す →</a>
+        </article>
+
+        <!-- カード4: 生活費シミュレーター -->
+        <article class="product-card">
+          <span class="product-card__icon">📊</span>
+          <div class="product-card__badges">
+            <span class="badge">無料</span>
+            <span class="badge">Webツール</span>
+          </div>
+          <h3 class="product-card__name">生活費シミュレーター</h3>
+          <p class="product-card__desc">
+            年収・居住地・家族構成を入力するだけで、推奨家賃・生活費・貯蓄額を自動計算。全47都道府県対応。
+          </p>
+          <div class="product-card__tags">
+            <span class="tag">全47都道府県対応</span>
+            <span class="tag">グラフ表示</span>
+            <span class="tag">無料</span>
+          </div>
+          <a href="./life-budget/index.html" class="btn-text">ツールを使う →</a>
+        </article>
+
+        <!-- カード5: AI漫画コンシェルジュ -->
         <article class="product-card">
           <span class="product-card__icon">📚</span>
           <div class="product-card__badges">
@@ -644,7 +846,7 @@
           </div>
         </article>
 
-        <!-- カード2: 冷蔵庫マネージャー -->
+        <!-- カード6: 冷蔵庫マネージャー -->
         <article class="product-card">
           <span class="product-card__icon">🧊</span>
           <div class="product-card__badges">
@@ -660,25 +862,6 @@
             <span class="tag">AIレシピ</span>
             <span class="tag">栄養分析</span>
           </div>
-        </article>
-
-        <!-- カード3: 生活費シミュレーター -->
-        <article class="product-card">
-          <span class="product-card__icon">📊</span>
-          <div class="product-card__badges">
-            <span class="badge">無料</span>
-            <span class="badge">Webツール</span>
-          </div>
-          <h3 class="product-card__name">生活費シミュレーター</h3>
-          <p class="product-card__desc">
-            年収・居住地・家族構成を入力するだけで、推奨家賃・生活費・貯蓄額を自動計算。全47都道府県対応。
-          </p>
-          <div class="product-card__tags">
-            <span class="tag">全47都道府県対応</span>
-            <span class="tag">グラフ表示</span>
-            <span class="tag">無料</span>
-          </div>
-          <a href="./life-budget/index.html" class="btn-text">ツールを使う →</a>
         </article>
 
       </div>
@@ -755,12 +938,12 @@
 
         <div class="about__stats">
           <div class="stat-item">
-            <div class="stat-item__number">3<span class="unit">本</span></div>
-            <div class="stat-item__label">プロダクト数</div>
+            <div class="stat-item__number">4<span class="unit">本</span></div>
+            <div class="stat-item__label">公開Webサービス数</div>
           </div>
           <div class="stat-item">
-            <div class="stat-item__number">4<span class="unit">本</span></div>
-            <div class="stat-item__label">公開コンテンツ</div>
+            <div class="stat-item__number">7<span class="unit">本</span></div>
+            <div class="stat-item__label">Note記事</div>
           </div>
           <div class="stat-item">
             <div class="stat-item__number" style="font-size:22px; letter-spacing:-0.5px;">Android / Web</div>
@@ -769,6 +952,16 @@
         </div>
 
       </div>
+    </div>
+  </section>
+
+  <!-- ===== Note CTA ===== -->
+  <section class="note-cta">
+    <div class="note-cta__inner">
+      <p class="note-cta__label">Note</p>
+      <h2 class="note-cta__title">開発ストーリーを発信中</h2>
+      <p class="note-cta__sub">アプリ開発の裏側・AI活用・転職など、<br>週2回ペースで更新しています。</p>
+      <a href="https://note.com" class="note-cta__btn" target="_blank" rel="noopener">Noteを読む →</a>
     </div>
   </section>
 
@@ -783,9 +976,6 @@
         </svg>
       </div>
       <p class="footer__copy">© 2026 Clarix. All rights reserved.</p>
-      <div class="footer__email">
-        <a href="mailto:yoshi0711private@outlook.jp">yoshi0711private@outlook.jp</a>
-      </div>
     </div>
   </footer>
 
