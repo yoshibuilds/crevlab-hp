@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>おでかけログ | 行ったお店・旅行を記録 | Crevlab</title>
+  <meta name="description" content="訪れたレストラン・カフェ・お店・旅行先をかんたんに記録・管理できる無料のWebツールです。" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary:   #f4845f;
+      --primary-d: #d95f38;
+      --primary-l: #f9a98f;
+      --accent:    #4ecdc4;
+      --bg:        #fff9f7;
+      --card:      #ffffff;
+      --text:      #2d1f1a;
+      --muted:     #9e7b72;
+      --border:    #f0d9d2;
+      --radius:    14px;
+      --shadow:    0 4px 20px rgba(244,132,95,.13);
+    }
+    body {
+      font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
+
+    /* ヘッダー */
+    header {
+      background: linear-gradient(135deg, var(--primary-d) 0%, var(--primary) 60%, var(--primary-l) 100%);
+      color: #fff;
+      padding: 36px 20px 28px;
+      text-align: center;
+    }
+    header h1 { font-size: clamp(1.4rem, 5vw, 1.9rem); font-weight: 700; letter-spacing: .04em; }
+    header p  { margin-top: 6px; font-size: .9rem; opacity: .88; }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 12px;
+      font-size: .82rem;
+      color: rgba(255,255,255,.8);
+      text-decoration: none;
+    }
+    .back-link:hover { color: #fff; }
+
+    /* タブ */
+    .tabs {
+      display: flex;
+      background: #fff;
+      border-bottom: 2px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .tab {
+      flex: 1;
+      padding: 14px 8px;
+      text-align: center;
+      font-size: .9rem;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      border: none;
+      background: none;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: color .2s, border-color .2s;
+    }
+    .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+    /* メイン */
+    main { max-width: 680px; margin: 0 auto; padding: 20px 16px; }
+
+    /* セクション切り替え */
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* ===== 一覧 ===== */
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .search-box {
+      flex: 1;
+      min-width: 160px;
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 999px;
+      font-size: .9rem;
+      background: #fff;
+      color: var(--text);
+      outline: none;
+    }
+    .search-box:focus { border-color: var(--primary); }
+    .filter-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+    .filter-btn {
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1.5px solid var(--border);
+      font-size: .82rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: #fff;
+      color: var(--muted);
+      transition: all .2s;
+    }
+    .filter-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+    .stats {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .stat-card {
+      flex: 1;
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 14px 12px;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+    .stat-num { font-size: 1.6rem; font-weight: 700; color: var(--primary); }
+    .stat-label { font-size: .75rem; color: var(--muted); margin-top: 2px; }
+
+    .log-list { display: flex; flex-direction: column; gap: 12px; }
+    .log-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      animation: fadeIn .25s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+    .log-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+    .log-icon.restaurant { background: #fff0eb; }
+    .log-icon.cafe       { background: #fff7e6; }
+    .log-icon.shop       { background: #ebf5ff; }
+    .log-icon.travel     { background: #ebfaf9; }
+    .log-icon.other      { background: #f5f5f5; }
+    .log-body { flex: 1; min-width: 0; }
+    .log-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+    .log-name { font-weight: 700; font-size: 1rem; }
+    .log-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .btn-icon {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 2px 4px;
+      border-radius: 6px;
+      transition: background .15s;
+    }
+    .btn-icon:hover { background: var(--border); }
+    .log-meta { display: flex; gap: 10px; align-items: center; margin-top: 4px; flex-wrap: wrap; }
+    .log-cat {
+      font-size: .75rem;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+    .log-cat.restaurant { background: #ffe8e0; color: #c94a22; }
+    .log-cat.cafe       { background: #fff2d6; color: #a0720a; }
+    .log-cat.shop       { background: #dceeff; color: #1a6bb8; }
+    .log-cat.travel     { background: #d6f6f4; color: #0f8a83; }
+    .log-cat.other      { background: #eee; color: #666; }
+    .log-date { font-size: .78rem; color: var(--muted); }
+    .log-location { font-size: .82rem; color: var(--muted); margin-top: 4px; }
+    .log-location::before { content: '📍 '; }
+    .stars { font-size: .85rem; color: #f4a623; margin-top: 2px; }
+    .log-note { font-size: .85rem; color: #5a3e38; margin-top: 6px; line-height: 1.55; }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+    .empty-state .emoji { font-size: 3rem; margin-bottom: 12px; }
+    .empty-state p { font-size: .9rem; }
+
+    /* ===== 追加フォーム ===== */
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px 18px;
+      margin-bottom: 16px;
+    }
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1.5px solid var(--border);
+    }
+    .form-group { margin-bottom: 14px; }
+    label {
+      display: block;
+      font-size: .85rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .required::after { content: ' *'; color: var(--primary); }
+    input[type="text"],
+    input[type="date"],
+    input[type="url"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: .92rem;
+      font-family: inherit;
+      background: #fff;
+      color: var(--text);
+      outline: none;
+      transition: border-color .2s;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--primary); }
+    textarea { resize: vertical; min-height: 80px; }
+    .cat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    .cat-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all .2s;
+      background: #fff;
+    }
+    .cat-option:has(input:checked) {
+      border-color: var(--primary);
+      background: #fff5f2;
+    }
+    .cat-option input { display: none; }
+    .cat-option .cat-emoji { font-size: 1.2rem; }
+    .cat-option span { font-size: .88rem; font-weight: 600; }
+    .star-selector { display: flex; gap: 6px; }
+    .star-btn {
+      background: none;
+      border: none;
+      font-size: 1.6rem;
+      cursor: pointer;
+      color: #ddd;
+      transition: color .15s, transform .1s;
+      padding: 0;
+    }
+    .star-btn.filled { color: #f4a623; }
+    .star-btn:hover { transform: scale(1.1); }
+    .btn-primary {
+      width: 100%;
+      padding: 14px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .2s, transform .1s;
+    }
+    .btn-primary:hover { background: var(--primary-d); }
+    .btn-primary:active { transform: scale(.98); }
+    .success-toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #222;
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 999px;
+      font-size: .9rem;
+      font-weight: 600;
+      opacity: 0;
+      transition: all .3s;
+      pointer-events: none;
+      z-index: 999;
+      white-space: nowrap;
+    }
+    .success-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* 削除確認モーダル */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.4);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 24px 20px;
+      max-width: 320px;
+      width: 100%;
+      text-align: center;
+    }
+    .modal h3 { font-size: 1.05rem; margin-bottom: 8px; }
+    .modal p  { font-size: .88rem; color: var(--muted); margin-bottom: 20px; }
+    .modal-btns { display: flex; gap: 10px; }
+    .btn-cancel {
+      flex: 1; padding: 12px; border: 1.5px solid var(--border);
+      border-radius: 10px; background: #fff; color: var(--text);
+      font-size: .9rem; font-weight: 600; cursor: pointer;
+    }
+    .btn-danger {
+      flex: 1; padding: 12px; border: none;
+      border-radius: 10px; background: #e74c3c; color: #fff;
+      font-size: .9rem; font-weight: 600; cursor: pointer;
+    }
+
+    @media (max-width: 400px) {
+      .cat-grid { grid-template-columns: 1fr 1fr; }
+      .stats .stat-num { font-size: 1.3rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a class="back-link" href="../">← Crevlab トップへ</a>
+  <h1>📍 おでかけログ</h1>
+  <p>行ったお店・旅行先をかんたん記録</p>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('list')">📋 記録一覧</button>
+  <button class="tab" onclick="switchTab('add')">➕ 新規追加</button>
+</div>
+
+<main>
+
+  <!-- 一覧セクション -->
+  <section class="section active" id="sec-list">
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-total">0</div>
+        <div class="stat-label">合計記録</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-travel">0</div>
+        <div class="stat-label">旅行</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-food">0</div>
+        <div class="stat-label">グルメ</div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <input class="search-box" type="text" placeholder="🔍 名前・場所で検索" oninput="renderList()" id="search-input" />
+      <div class="filter-btns">
+        <button class="filter-btn active" data-filter="all" onclick="setFilter('all',this)">すべて</button>
+        <button class="filter-btn" data-filter="restaurant" onclick="setFilter('restaurant',this)">🍽️</button>
+        <button class="filter-btn" data-filter="cafe" onclick="setFilter('cafe',this)">☕</button>
+        <button class="filter-btn" data-filter="shop" onclick="setFilter('shop',this)">🛍️</button>
+        <button class="filter-btn" data-filter="travel" onclick="setFilter('travel',this)">✈️</button>
+        <button class="filter-btn" data-filter="other" onclick="setFilter('other',this)">📌</button>
+      </div>
+    </div>
+
+    <div class="log-list" id="log-list"></div>
+  </section>
+
+  <!-- 追加セクション -->
+  <section class="section" id="sec-add">
+    <div class="card">
+      <div class="card-title">✏️ おでかけを記録する</div>
+
+      <div class="form-group">
+        <label class="required">名前（お店・旅行先）</label>
+        <input type="text" id="f-name" placeholder="例：銀座 すきやばし次郎、京都旅行" />
+      </div>
+
+      <div class="form-group">
+        <label class="required">カテゴリ</label>
+        <div class="cat-grid">
+          <label class="cat-option">
+            <input type="radio" name="category" value="restaurant" checked />
+            <span class="cat-emoji">🍽️</span><span>レストラン</span>
+          </label>
+          <label class="cat-option">
+            <input type="radio" name="category" value="cafe" />
+            <span class="cat-emoji">☕</span><span>カフェ</span>
+          </label>
+          <label class="cat-option">
+            <input type="radio" name="category" value="shop" />
+            <span class="cat-emoji">🛍️</span><span>ショップ</span>
+          </label>
+          <label class="cat-option">
+            <input type="radio" name="category" value="travel" />
+            <span class="cat-emoji">✈️</span><span>旅行・観光</span>
+          </label>
+          <label class="cat-option" style="grid-column: 1 / -1;">
+            <input type="radio" name="category" value="other" />
+            <span class="cat-emoji">📌</span><span>その他</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>場所・住所</label>
+        <input type="text" id="f-location" placeholder="例：東京都中央区銀座4丁目" />
+      </div>
+
+      <div class="form-group">
+        <label>訪問日</label>
+        <input type="date" id="f-date" />
+      </div>
+
+      <div class="form-group">
+        <label>評価</label>
+        <div class="star-selector" id="star-selector">
+          <button class="star-btn" data-v="1" onclick="setStar(1)">★</button>
+          <button class="star-btn" data-v="2" onclick="setStar(2)">★</button>
+          <button class="star-btn" data-v="3" onclick="setStar(3)">★</button>
+          <button class="star-btn" data-v="4" onclick="setStar(4)">★</button>
+          <button class="star-btn" data-v="5" onclick="setStar(5)">★</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>メモ・感想</label>
+        <textarea id="f-note" placeholder="雰囲気・おすすめポイント・次回また行きたいかなど自由に"></textarea>
+      </div>
+
+      <button class="btn-primary" onclick="saveEntry()">💾 記録を保存する</button>
+    </div>
+  </section>
+
+</main>
+
+<!-- トースト -->
+<div class="success-toast" id="toast"></div>
+
+<!-- 削除確認モーダル -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h3>削除しますか？</h3>
+    <p>この記録を削除します。<br>元に戻すことはできません。</p>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+      <button class="btn-danger" onclick="confirmDelete()">削除する</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const STORAGE_KEY = 'crevlab-place-log-v1';
+  let entries = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  let currentFilter = 'all';
+  let deleteTargetId = null;
+  let currentRating = 0;
+  let editingId = null;
+
+  const CAT_META = {
+    restaurant: { emoji: '🍽️', label: 'レストラン' },
+    cafe:       { emoji: '☕', label: 'カフェ' },
+    shop:       { emoji: '🛍️', label: 'ショップ' },
+    travel:     { emoji: '✈️', label: '旅行・観光' },
+    other:      { emoji: '📌', label: 'その他' },
+  };
+
+  // 今日の日付をデフォルト設定
+  document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', (i === 0) === (tab === 'list')));
+    document.getElementById('sec-list').classList.toggle('active', tab === 'list');
+    document.getElementById('sec-add').classList.toggle('active', tab === 'add');
+    if (tab === 'list') renderList();
+    if (tab === 'add' && !editingId) resetForm();
+  }
+
+  function setFilter(f, btn) {
+    currentFilter = f;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderList();
+  }
+
+  function setStar(n) {
+    currentRating = n;
+    document.querySelectorAll('.star-btn').forEach(b => {
+      b.classList.toggle('filled', parseInt(b.dataset.v) <= n);
+    });
+  }
+
+  function starsHTML(n) {
+    if (!n) return '';
+    return '★'.repeat(n) + '☆'.repeat(5 - n);
+  }
+
+  function renderList() {
+    const q = document.getElementById('search-input').value.toLowerCase();
+    const filtered = entries.filter(e => {
+      const matchFilter = currentFilter === 'all' || e.category === currentFilter;
+      const matchSearch = !q || e.name.toLowerCase().includes(q) || (e.location||'').toLowerCase().includes(q) || (e.note||'').toLowerCase().includes(q);
+      return matchFilter && matchSearch;
+    }).sort((a, b) => (b.date || '').localeCompare(a.date || '') || b.id - a.id);
+
+    document.getElementById('stat-total').textContent  = entries.length;
+    document.getElementById('stat-travel').textContent = entries.filter(e => e.category === 'travel').length;
+    document.getElementById('stat-food').textContent   = entries.filter(e => e.category === 'restaurant' || e.category === 'cafe').length;
+
+    const list = document.getElementById('log-list');
+    if (!filtered.length) {
+      list.innerHTML = `<div class="empty-state"><div class="emoji">${entries.length ? '🔍' : '📍'}</div><p>${entries.length ? '該当する記録が見つかりません' : 'まだ記録がありません。<br>「新規追加」から記録しましょう！'}</p></div>`;
+      return;
+    }
+
+    list.innerHTML = filtered.map(e => {
+      const m = CAT_META[e.category] || CAT_META.other;
+      const dateStr = e.date ? e.date.replace(/-/g, '/') : '';
+      return `
+        <div class="log-card">
+          <div class="log-icon ${e.category}">${m.emoji}</div>
+          <div class="log-body">
+            <div class="log-header">
+              <div class="log-name">${esc(e.name)}</div>
+              <div class="log-actions">
+                <button class="btn-icon" title="編集" onclick="startEdit(${e.id})">✏️</button>
+                <button class="btn-icon" title="削除" onclick="openModal(${e.id})">🗑️</button>
+              </div>
+            </div>
+            <div class="log-meta">
+              <span class="log-cat ${e.category}">${m.label}</span>
+              ${dateStr ? `<span class="log-date">${dateStr}</span>` : ''}
+            </div>
+            ${e.location ? `<div class="log-location">${esc(e.location)}</div>` : ''}
+            ${e.rating ? `<div class="stars">${starsHTML(e.rating)}</div>` : ''}
+            ${e.note ? `<div class="log-note">${esc(e.note).replace(/\n/g,'<br>')}</div>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function saveEntry() {
+    const name = document.getElementById('f-name').value.trim();
+    if (!name) { showToast('⚠️ 名前を入力してください'); return; }
+    const cat = document.querySelector('input[name="category"]:checked').value;
+    const entry = {
+      id:       editingId || Date.now(),
+      name,
+      category: cat,
+      location: document.getElementById('f-location').value.trim(),
+      date:     document.getElementById('f-date').value,
+      rating:   currentRating,
+      note:     document.getElementById('f-note').value.trim(),
+    };
+    if (editingId) {
+      const idx = entries.findIndex(e => e.id === editingId);
+      if (idx !== -1) entries[idx] = entry;
+      editingId = null;
+    } else {
+      entries.unshift(entry);
+    }
+    save();
+    resetForm();
+    showToast('✅ 記録を保存しました！');
+    switchTab('list');
+  }
+
+  function resetForm() {
+    editingId = null;
+    document.getElementById('f-name').value = '';
+    document.getElementById('f-location').value = '';
+    document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('f-note').value = '';
+    document.querySelector('input[name="category"][value="restaurant"]').checked = true;
+    setStar(0);
+    document.querySelector('.card-title').textContent = '✏️ おでかけを記録する';
+    document.querySelector('.btn-primary').textContent = '💾 記録を保存する';
+  }
+
+  function startEdit(id) {
+    const e = entries.find(x => x.id === id);
+    if (!e) return;
+    editingId = id;
+    document.getElementById('f-name').value     = e.name;
+    document.getElementById('f-location').value = e.location || '';
+    document.getElementById('f-date').value      = e.date || '';
+    document.getElementById('f-note').value      = e.note || '';
+    const radioEl = document.querySelector(`input[name="category"][value="${e.category}"]`);
+    if (radioEl) radioEl.checked = true;
+    setStar(e.rating || 0);
+    document.querySelector('.card-title').textContent   = '✏️ 記録を編集する';
+    document.querySelector('.btn-primary').textContent  = '💾 変更を保存する';
+    switchTab('add');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function openModal(id) { deleteTargetId = id; document.getElementById('modal').classList.add('show'); }
+  function closeModal()  { deleteTargetId = null; document.getElementById('modal').classList.remove('show'); }
+  function confirmDelete() {
+    entries = entries.filter(e => e.id !== deleteTargetId);
+    save(); closeModal(); renderList();
+    showToast('🗑️ 削除しました');
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  // 初期描画
+  renderList();
+</script>
+</body>
+</html>
