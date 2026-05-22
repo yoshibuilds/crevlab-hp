@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RoomPlan（部屋配置＆断捨離アドバイザー）| Crevlab</title>
+  <meta name="description" content="部屋の家具を配置して、断捨離レベルに合わせたミニマリストアドバイスを受けられる無料ツールです。" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'><polygon points='18,2 34,18 18,34 2,18' fill='%238B6F47'/></svg>">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary:   #8B6F47;
+      --primary-d: #6B4F27;
+      --primary-l: #C4A47C;
+      --bg:        #FAF6F0;
+      --card:      #ffffff;
+      --text:      #2d1f0e;
+      --muted:     #8a7464;
+      --border:    #e0d4c0;
+      --radius:    12px;
+      --shadow:    0 4px 20px rgba(139,111,71,.10);
+      --danger:    #c0392b;
+    }
+
+    body {
+      font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
+
+    /* ===== ヘッダー ===== */
+    header {
+      background: linear-gradient(135deg, var(--primary-d) 0%, var(--primary) 60%, var(--primary-l) 100%);
+      color: #fff;
+      padding: 0 16px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      box-shadow: 0 2px 8px rgba(107,79,39,.25);
+    }
+    .back-link {
+      color: rgba(255,255,255,.85);
+      text-decoration: none;
+      font-size: .85rem;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .back-link:hover { color: #fff; }
+    header h1 {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ===== タブ ===== */
+    .tab-bar {
+      display: flex;
+      background: #fff;
+      border-bottom: 2px solid var(--border);
+      position: sticky;
+      top: 56px;
+      z-index: 100;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 12px 4px;
+      background: none;
+      border: none;
+      font-family: inherit;
+      font-size: .85rem;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: color .2s, border-color .2s;
+    }
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    /* ===== タブコンテンツ ===== */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ===== カード ===== */
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      margin: 12px;
+    }
+    .card-title {
+      font-size: .9rem;
+      font-weight: 700;
+      color: var(--primary-d);
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--border);
+    }
+
+    /* ===== 配置タブ ===== */
+    #tab-place {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 部屋設定 */
+    .room-settings {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .room-settings label {
+      font-size: .8rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .room-settings input[type="text"] {
+      flex: 1;
+      min-width: 100px;
+      padding: 8px 10px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: .9rem;
+      color: var(--text);
+      background: var(--bg);
+    }
+    .room-settings input[type="text"]:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    .room-settings input[type="number"] {
+      width: 56px;
+      padding: 8px 6px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: .9rem;
+      color: var(--text);
+      background: var(--bg);
+      text-align: center;
+      -moz-appearance: textfield;
+    }
+    .room-settings input[type="number"]::-webkit-inner-spin-button,
+    .room-settings input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+    .room-settings input[type="number"]:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    /* ===== 家具パレット ===== */
+    .palette-section {
+      margin: 0 12px 12px;
+    }
+    .palette-title {
+      font-size: .8rem;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+    .palette-scroll {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    .palette-scroll::-webkit-scrollbar { height: 4px; }
+    .palette-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .palette-item {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 8px 10px;
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: border-color .15s, box-shadow .15s, transform .1s;
+      min-width: 64px;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .palette-item:hover {
+      border-color: var(--primary-l);
+      transform: translateY(-1px);
+      box-shadow: 0 3px 10px rgba(139,111,71,.15);
+    }
+    .palette-item.selected {
+      border-color: var(--primary);
+      background: #fff8f0;
+      box-shadow: 0 0 0 3px rgba(139,111,71,.2);
+    }
+    .palette-emoji { font-size: 1.4rem; line-height: 1; }
+    .palette-name { font-size: .65rem; color: var(--text); font-weight: 600; text-align: center; line-height: 1.2; }
+    .palette-size { font-size: .6rem; color: var(--muted); }
+
+    /* ===== グリッドエリア ===== */
+    .grid-wrapper {
+      margin: 0 12px 12px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 12px;
+    }
+    .grid-info {
+      font-size: .75rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .grid-container {
+      position: relative;
+      display: inline-block;
+      background: #f5ede0;
+      border: 2px solid var(--primary-l);
+      border-radius: 8px;
+      overflow: visible;
+      cursor: crosshair;
+    }
+    .grid-canvas {
+      display: grid;
+      position: relative;
+    }
+    .grid-cell {
+      border-right: 1px solid rgba(139,111,71,.18);
+      border-bottom: 1px solid rgba(139,111,71,.18);
+      transition: background .1s;
+    }
+    .grid-cell:hover {
+      background: rgba(139,111,71,.08);
+    }
+    .grid-cell.highlight {
+      background: rgba(139,111,71,.14);
+    }
+
+    /* 家具オーバーレイ */
+    .furniture-overlay {
+      position: absolute;
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: opacity .1s, box-shadow .15s;
+      border: 2px solid rgba(0,0,0,.12);
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      z-index: 10;
+    }
+    .furniture-overlay:hover {
+      box-shadow: 0 2px 10px rgba(0,0,0,.2);
+      border-color: rgba(0,0,0,.25);
+    }
+    .furniture-overlay.selected {
+      box-shadow: 0 0 0 3px var(--primary), 0 2px 10px rgba(0,0,0,.2);
+      border-color: var(--primary);
+      z-index: 20;
+    }
+    .overlay-emoji { font-size: 1.1rem; line-height: 1; }
+    .overlay-name { font-size: .55rem; font-weight: 700; color: rgba(0,0,0,.6); text-align: center; line-height: 1.1; }
+
+    /* ゴースト（プレビュー） */
+    .ghost-overlay {
+      position: absolute;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: .45;
+      border: 2px dashed rgba(0,0,0,.3);
+      pointer-events: none;
+      z-index: 30;
+      font-size: 1.3rem;
+    }
+    .ghost-overlay.invalid {
+      background: rgba(192,57,43,.25) !important;
+      border-color: var(--danger);
+    }
+
+    /* アクションバー */
+    .action-bar {
+      display: none;
+      margin: 0 12px 12px;
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 10px 14px;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .action-bar.visible { display: flex; }
+    .action-bar-label {
+      font-size: .8rem;
+      color: var(--muted);
+      font-weight: 600;
+      flex: 1;
+      min-width: 80px;
+    }
+    .action-btn {
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: none;
+      font-family: inherit;
+      font-size: .85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .15s, transform .1s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .action-btn:active { transform: scale(.96); }
+    .btn-rotate {
+      background: var(--primary-l);
+      color: #fff;
+    }
+    .btn-rotate:hover { background: var(--primary); }
+    .btn-delete {
+      background: #fdecea;
+      color: var(--danger);
+    }
+    .btn-delete:hover { background: #fad1ce; }
+
+    /* ===== ミニマリストレベル ===== */
+    .level-section { margin: 0 12px 12px; }
+    .level-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .level-label { font-size: .8rem; color: var(--muted); font-weight: 600; }
+    .level-value {
+      font-size: .95rem;
+      font-weight: 700;
+      color: var(--primary);
+      min-width: 120px;
+    }
+    input[type="range"] {
+      flex: 1;
+      accent-color: var(--primary);
+      cursor: pointer;
+      height: 4px;
+    }
+    .level-badges {
+      display: flex;
+      gap: 4px;
+      justify-content: space-between;
+      font-size: .65rem;
+      color: var(--muted);
+    }
+    .level-badge {
+      flex: 1;
+      text-align: center;
+      padding: 3px 2px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background .15s;
+      user-select: none;
+    }
+    .level-badge.active {
+      background: var(--primary-l);
+      color: #fff;
+      font-weight: 700;
+    }
+
+    /* ===== 分析タブ ===== */
+    .score-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .score-card {
+      background: var(--bg);
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+    }
+    .score-label {
+      font-size: .7rem;
+      color: var(--muted);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .score-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--primary);
+      line-height: 1;
+    }
+    .score-unit {
+      font-size: .7rem;
+      color: var(--muted);
+    }
+
+    .advice-title {
+      font-size: .85rem;
+      font-weight: 700;
+      color: var(--primary-d);
+      margin: 12px 0 8px;
+    }
+    .advice-item {
+      display: flex;
+      gap: 8px;
+      padding: 8px 10px;
+      background: var(--bg);
+      border-radius: 8px;
+      margin-bottom: 6px;
+      font-size: .8rem;
+    }
+    .advice-item-emoji { flex-shrink: 0; font-size: 1rem; }
+    .advice-item-content {}
+    .advice-item-name { font-weight: 700; color: var(--text); }
+    .advice-item-msg { color: var(--muted); margin-top: 2px; line-height: 1.4; }
+
+    .layout-advice {
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: .85rem;
+      line-height: 1.5;
+      font-weight: 600;
+    }
+    .layout-advice.ok { background: #e8f5e9; color: #2e7d32; }
+    .layout-advice.warn { background: #fff3e0; color: #e65100; }
+    .layout-advice.bad { background: #fdecea; color: var(--danger); }
+
+    .empty-state {
+      text-align: center;
+      color: var(--muted);
+      font-size: .85rem;
+      padding: 24px 16px;
+    }
+
+    /* ===== 保存済みタブ ===== */
+    .save-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .btn-primary {
+      padding: 10px 18px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: .9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .15s;
+      flex-shrink: 0;
+    }
+    .btn-primary:hover { background: var(--primary-d); }
+    .btn-primary:active { transform: scale(.97); }
+
+    .saved-room-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--bg);
+      border-radius: 10px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .saved-room-item:hover {
+      border-color: var(--primary-l);
+      box-shadow: 0 2px 8px rgba(139,111,71,.1);
+    }
+    .saved-room-name {
+      flex: 1;
+      font-weight: 700;
+      font-size: .9rem;
+    }
+    .saved-room-meta {
+      font-size: .72rem;
+      color: var(--muted);
+    }
+    .btn-icon {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 4px 6px;
+      border-radius: 6px;
+      transition: background .15s;
+    }
+    .btn-icon:hover { background: rgba(192,57,43,.1); }
+
+    /* ===== トースト ===== */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--primary-d);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 24px;
+      font-size: .85rem;
+      font-weight: 600;
+      box-shadow: 0 4px 20px rgba(0,0,0,.2);
+      opacity: 0;
+      transition: opacity .3s, transform .3s;
+      pointer-events: none;
+      z-index: 999;
+      white-space: nowrap;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ===== レスポンシブ（デスクトップ） ===== */
+    @media (min-width: 768px) {
+      #tab-place {
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 0;
+      }
+      .sidebar {
+        width: 220px;
+        flex-shrink: 0;
+        position: sticky;
+        top: 112px;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+      }
+      .main-area { flex: 1; min-width: 0; }
+      .palette-scroll {
+        flex-direction: column;
+        overflow-x: visible;
+        overflow-y: visible;
+      }
+      .palette-item {
+        flex-direction: row;
+        justify-content: flex-start;
+        min-width: unset;
+        padding: 7px 10px;
+        gap: 8px;
+      }
+      .palette-emoji { font-size: 1.2rem; }
+      .palette-name { text-align: left; font-size: .75rem; }
+      .palette-size { font-size: .68rem; }
+    }
+
+    /* ===== スクロールバー ===== */
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="../" class="back-link">← Crevlab</a>
+  <h1>🛋️ RoomPlan — 部屋配置＆断捨離アドバイザー</h1>
+</header>
+
+<!-- タブバー -->
+<div class="tab-bar">
+  <button class="tab-btn active" data-tab="place">配置</button>
+  <button class="tab-btn" data-tab="analysis">分析</button>
+  <button class="tab-btn" data-tab="saved">保存済み</button>
+</div>
+
+<!-- ===== 配置タブ ===== -->
+<div id="tab-place" class="tab-panel active">
+
+  <!-- サイドバー（デスクトップ）/ 上部エリア（モバイル） -->
+  <div class="sidebar">
+    <!-- 部屋設定 -->
+    <div class="card">
+      <div class="card-title">🏠 部屋設定</div>
+      <div class="room-settings">
+        <label>名前</label>
+        <input type="text" id="roomName" value="リビング" placeholder="部屋名" />
+      </div>
+      <div class="room-settings" style="margin-top:10px; gap:6px;">
+        <label>横</label>
+        <input type="number" id="gridCols" value="14" min="4" max="20" />
+        <label style="margin-left:4px;">縦</label>
+        <input type="number" id="gridRows" value="10" min="4" max="16" />
+        <label style="font-size:.7rem; color:var(--muted);">マス</label>
+      </div>
+      <div style="font-size:.7rem; color:var(--muted); margin-top:6px;">
+        ※ 1マス = 0.5m
+      </div>
+    </div>
+
+    <!-- ミニマリストレベル -->
+    <div class="card" style="margin-top:0;">
+      <div class="card-title">✨ 断捨離レベル</div>
+      <div class="level-row">
+        <input type="range" id="levelSlider" min="1" max="5" value="2" />
+      </div>
+      <div class="level-badges" id="levelBadges">
+        <div class="level-badge" data-level="1">📦<br>コレクター</div>
+        <div class="level-badge" data-level="2">🏠<br>普通</div>
+        <div class="level-badge" data-level="3">✨<br>すっきり</div>
+        <div class="level-badge" data-level="4">🌿<br>ミニマル</div>
+        <div class="level-badge" data-level="5">⬜<br>超ミニマル</div>
+      </div>
+    </div>
+
+    <!-- 家具パレット -->
+    <div class="palette-section">
+      <div class="palette-title">家具を選んで配置</div>
+      <div class="palette-scroll" id="paletteList"></div>
+    </div>
+  </div>
+
+  <!-- メインエリア -->
+  <div class="main-area">
+    <!-- アクションバー（家具選択時） -->
+    <div class="action-bar" id="actionBar">
+      <div class="action-bar-label" id="actionLabel">選択中</div>
+      <button class="action-btn btn-rotate" id="btnRotate">🔄 回転</button>
+      <button class="action-btn btn-delete" id="btnDelete">🗑️ 削除</button>
+    </div>
+
+    <!-- グリッド -->
+    <div class="grid-wrapper">
+      <div class="grid-info" id="gridInfo">7.0m × 5.0m の部屋 — クリックして家具を配置</div>
+      <div class="grid-container" id="gridContainer">
+        <div class="grid-canvas" id="gridCanvas"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 分析タブ ===== -->
+<div id="tab-analysis" class="tab-panel">
+  <div class="card">
+    <div class="card-title">📊 断捨離分析</div>
+    <div id="analysisContent">
+      <div class="empty-state">家具を配置すると分析が表示されます</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 保存済み部屋タブ ===== -->
+<div id="tab-saved" class="tab-panel">
+  <div class="card">
+    <div class="card-title">💾 部屋を保存・管理</div>
+    <div class="save-bar">
+      <button class="btn-primary" id="btnSaveRoom">💾 現在の部屋を保存</button>
+    </div>
+    <div id="savedRoomsList">
+      <div class="empty-state">保存済みの部屋がありません</div>
+    </div>
+  </div>
+</div>
+
+<!-- トースト通知 -->
+<div id="toast"></div>
+
+<script>
+// =====================================================
+//  定数・設定
+// =====================================================
+const STORAGE_KEY = 'crevlab-roomplan-v1';
+const MAX_SAVED = 10;
+
+const FURNITURE_DEFS = {
+  bed_s:    { name:'シングルベッド', emoji:'🛏️', w:2, h:4, necessity:5, color:'#c8d8f0' },
+  bed_d:    { name:'ダブルベッド',   emoji:'🛏️', w:3, h:4, necessity:5, color:'#b0c4e8' },
+  sofa:     { name:'ソファ',         emoji:'🛋️', w:4, h:2, necessity:2, color:'#d4b896' },
+  dining:   { name:'ダイニングテーブル', emoji:'🪑', w:4, h:2, necessity:3, color:'#d4a87a' },
+  tv_stand: { name:'テレビ台',       emoji:'📺', w:4, h:1, necessity:2, color:'#9ab8c8' },
+  bookshelf:{ name:'本棚',           emoji:'📚', w:1, h:4, necessity:2, color:'#a8d4a0' },
+  wardrobe: { name:'タンス',         emoji:'🚪', w:2, h:4, necessity:4, color:'#c4a0c4' },
+  desk:     { name:'デスク',         emoji:'🖥️', w:3, h:2, necessity:4, color:'#aac4e0' },
+  chair:    { name:'椅子',           emoji:'💺', w:1, h:1, necessity:3, color:'#e8c8a0' },
+  fridge:   { name:'冷蔵庫',         emoji:'🧊', w:1, h:2, necessity:5, color:'#d0e8f0' },
+  washing:  { name:'洗濯機',         emoji:'🫧', w:1, h:1, necessity:5, color:'#d0f0f8' },
+  storage:  { name:'収納ボックス',   emoji:'📦', w:1, h:1, necessity:1, color:'#e8d8b0' },
+  plant:    { name:'観葉植物',       emoji:'🌿', w:1, h:1, necessity:1, color:'#b8d8b0' },
+  shelf:    { name:'棚',             emoji:'🗄️', w:2, h:1, necessity:2, color:'#d0c8b0' },
+};
+
+const NECESSITY_ADVICE = {
+  storage:   '本当に中身を使っていますか？ミニマリストは収納を減らします',
+  bookshelf: '電子書籍への移行を検討しましょう',
+  sofa:      '床座りスタイルで部屋が広く感じられます',
+  tv_stand:  'テレビをなくすと時間と空間が生まれます',
+  plant:     '一鉢だけ残す選択も◎',
+  shelf:     '必要な物だけ収納できているか確認を',
+  wardrobe:  'カプセルワードローブに移行すれば1つで十分',
+};
+
+const LEVEL_LABELS = {
+  1: { text:'コレクター 📦', threshold:1 },
+  2: { text:'普通 🏠',       threshold:2 },
+  3: { text:'すっきり派 ✨', threshold:3 },
+  4: { text:'ミニマリスト 🌿', threshold:4 },
+  5: { text:'超ミニマリスト ⬜', threshold:5 },
+};
+
+// =====================================================
+//  状態
+// =====================================================
+let state = {
+  roomName: 'リビング',
+  cols: 14,
+  rows: 10,
+  level: 2,
+  furniture: [],   // { id, type, col, row, w, h }
+};
+
+let savedRooms = [];     // [{ id, name, date, state }]
+
+let selectedFurnitureId = null;
+let placeModeType = null;  // 配置モード中の家具タイプキー
+let cellSize = 32;         // px
+
+let ghostEl = null;
+let ghostInfo = null;      // { col, row, valid }
+
+// =====================================================
+//  ユーティリティ
+// =====================================================
+function genId() {
+  return Math.random().toString(36).slice(2, 9);
+}
+
+function getThreshold() {
+  return LEVEL_LABELS[state.level].threshold;
+}
+
+function calcCellSize() {
+  const wrapper = document.querySelector('.grid-wrapper');
+  if (!wrapper) return 32;
+  const available = wrapper.clientWidth - 24;
+  const max = 32;
+  const min = 20;
+  const byWidth = Math.floor(available / state.cols);
+  return Math.max(min, Math.min(max, byWidth));
+}
+
+// =====================================================
+//  ローカルストレージ
+// =====================================================
+function loadFromStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (data.state) state = data.state;
+    if (data.savedRooms) savedRooms = data.savedRooms;
+  } catch(e) {}
+}
+
+function saveToStorage() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ state, savedRooms }));
+  } catch(e) {}
+}
+
+// =====================================================
+//  トースト通知
+// =====================================================
+let toastTimer = null;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
+}
+
+// =====================================================
+//  グリッド描画
+// =====================================================
+function renderGrid() {
+  cellSize = calcCellSize();
+  const canvas = document.getElementById('gridCanvas');
+  const cols = state.cols;
+  const rows = state.rows;
+
+  canvas.style.gridTemplateColumns = `repeat(${cols}, ${cellSize}px)`;
+  canvas.style.width  = `${cols * cellSize}px`;
+  canvas.style.height = `${rows * cellSize}px`;
+  canvas.style.position = 'relative';
+
+  // セル再生成（軽量化: innerHTML）
+  let html = '';
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      html += `<div class="grid-cell" data-col="${c}" data-row="${r}" style="width:${cellSize}px;height:${cellSize}px;"></div>`;
+    }
+  }
+  canvas.innerHTML = html;
+
+  // グリッド情報
+  document.getElementById('gridInfo').textContent =
+    `${(cols * 0.5).toFixed(1)}m × ${(rows * 0.5).toFixed(1)}m の部屋 — ${placeModeType ? '配置先をクリック（ESCでキャンセル）' : 'クリックして家具を選択'}`;
+
+  // イベント（グリッドセル）
+  canvas.addEventListener('mousemove', onGridMouseMove);
+  canvas.addEventListener('mouseleave', onGridMouseLeave);
+  canvas.addEventListener('click', onGridClick);
+
+  renderFurnitureOverlays();
+}
+
+// =====================================================
+//  家具オーバーレイ描画
+// =====================================================
+function renderFurnitureOverlays() {
+  // 既存のオーバーレイを削除
+  const canvas = document.getElementById('gridCanvas');
+  canvas.querySelectorAll('.furniture-overlay').forEach(el => el.remove());
+
+  state.furniture.forEach(f => {
+    const el = document.createElement('div');
+    el.className = 'furniture-overlay' + (f.id === selectedFurnitureId ? ' selected' : '');
+    el.style.left   = `${f.col * cellSize}px`;
+    el.style.top    = `${f.row * cellSize}px`;
+    el.style.width  = `${f.w * cellSize}px`;
+    el.style.height = `${f.h * cellSize}px`;
+    el.style.background = FURNITURE_DEFS[f.type].color;
+
+    const emojiEl = document.createElement('div');
+    emojiEl.className = 'overlay-emoji';
+    emojiEl.textContent = FURNITURE_DEFS[f.type].emoji;
+    el.appendChild(emojiEl);
+
+    if (f.w * cellSize > 40 || f.h * cellSize > 40) {
+      const nameEl = document.createElement('div');
+      nameEl.className = 'overlay-name';
+      nameEl.textContent = FURNITURE_DEFS[f.type].name;
+      el.appendChild(nameEl);
+    }
+
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (placeModeType) return; // 配置モード中は無視
+      if (selectedFurnitureId === f.id) {
+        deselectFurniture();
+      } else {
+        selectFurniture(f.id);
+      }
+    });
+
+    canvas.appendChild(el);
+  });
+}
+
+// =====================================================
+//  家具選択・解除
+// =====================================================
+function selectFurniture(id) {
+  selectedFurnitureId = id;
+  const f = state.furniture.find(x => x.id === id);
+  const def = FURNITURE_DEFS[f.type];
+  const bar = document.getElementById('actionBar');
+  bar.classList.add('visible');
+  document.getElementById('actionLabel').textContent =
+    `${def.emoji} ${def.name} を選択中`;
+  renderFurnitureOverlays();
+}
+
+function deselectFurniture() {
+  selectedFurnitureId = null;
+  document.getElementById('actionBar').classList.remove('visible');
+  renderFurnitureOverlays();
+}
+
+// =====================================================
+//  衝突検出
+// =====================================================
+function isColliding(col, row, w, h, excludeId = null) {
+  // 境界チェック
+  if (col < 0 || row < 0 || col + w > state.cols || row + h > state.rows) return true;
+  // 衝突チェック
+  for (const f of state.furniture) {
+    if (f.id === excludeId) continue;
+    if (col < f.col + f.w && col + w > f.col &&
+        row < f.row + f.h && row + h > f.row) return true;
+  }
+  return false;
+}
+
+// =====================================================
+//  グリッドイベント
+// =====================================================
+function getCellFromEvent(e) {
+  const canvas = document.getElementById('gridCanvas');
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  const col = Math.floor(x / cellSize);
+  const row = Math.floor(y / cellSize);
+  return { col, row };
+}
+
+function onGridMouseMove(e) {
+  if (!placeModeType) {
+    removeGhost();
+    return;
+  }
+  const { col, row } = getCellFromEvent(e);
+  const def = FURNITURE_DEFS[placeModeType];
+  // 中央配置: カーソルを家具の中心に
+  const pc = col - Math.floor(def.w / 2);
+  const pr = row - Math.floor(def.h / 2);
+  showGhost(pc, pr, def.w, def.h, def.color, def.emoji);
+}
+
+function onGridMouseLeave() {
+  removeGhost();
+}
+
+function onGridClick(e) {
+  if (e.target.classList.contains('furniture-overlay')) return;
+
+  if (placeModeType) {
+    const { col, row } = getCellFromEvent(e);
+    const def = FURNITURE_DEFS[placeModeType];
+    const pc = col - Math.floor(def.w / 2);
+    const pr = row - Math.floor(def.h / 2);
+    placeFurniture(placeModeType, pc, pr, def.w, def.h);
+  } else {
+    deselectFurniture();
+  }
+}
+
+// =====================================================
+//  ゴースト（プレビュー）
+// =====================================================
+function showGhost(col, row, w, h, color, emoji) {
+  const canvas = document.getElementById('gridCanvas');
+  removeGhost();
+  const valid = !isColliding(col, row, w, h);
+  ghostEl = document.createElement('div');
+  ghostEl.className = 'ghost-overlay' + (valid ? '' : ' invalid');
+  ghostEl.style.left   = `${col * cellSize}px`;
+  ghostEl.style.top    = `${row * cellSize}px`;
+  ghostEl.style.width  = `${w * cellSize}px`;
+  ghostEl.style.height = `${h * cellSize}px`;
+  ghostEl.style.background = color;
+  ghostEl.textContent = emoji;
+  canvas.appendChild(ghostEl);
+  ghostInfo = { col, row, valid };
+}
+
+function removeGhost() {
+  if (ghostEl) { ghostEl.remove(); ghostEl = null; }
+  ghostInfo = null;
+}
+
+// =====================================================
+//  家具配置・削除
+// =====================================================
+function placeFurniture(type, col, row, w, h) {
+  if (isColliding(col, row, w, h)) {
+    showToast('⚠️ そこには配置できません');
+    return;
+  }
+  state.furniture.push({ id: genId(), type, col, row, w, h });
+  saveToStorage();
+  renderFurnitureOverlays();
+}
+
+function deleteFurniture(id) {
+  state.furniture = state.furniture.filter(f => f.id !== id);
+  selectedFurnitureId = null;
+  document.getElementById('actionBar').classList.remove('visible');
+  saveToStorage();
+  renderFurnitureOverlays();
+}
+
+function rotateFurniture(id) {
+  const f = state.furniture.find(x => x.id === id);
+  if (!f) return;
+  const newW = f.h, newH = f.w;
+  if (isColliding(f.col, f.row, newW, newH, id)) {
+    showToast('⚠️ 回転するスペースがありません');
+    return;
+  }
+  f.w = newW;
+  f.h = newH;
+  saveToStorage();
+  renderFurnitureOverlays();
+  selectFurniture(id); // 再選択で表示更新
+}
+
+// =====================================================
+//  配置モード切替
+// =====================================================
+function enterPlaceMode(type) {
+  placeModeType = type;
+  deselectFurniture();
+  // パレット強調
+  document.querySelectorAll('.palette-item').forEach(el => {
+    el.classList.toggle('selected', el.dataset.type === type);
+  });
+  document.getElementById('gridInfo').textContent =
+    `${FURNITURE_DEFS[type].emoji} ${FURNITURE_DEFS[type].name} を配置中 — クリックで配置 / ESCでキャンセル`;
+}
+
+function exitPlaceMode() {
+  placeModeType = null;
+  removeGhost();
+  document.querySelectorAll('.palette-item').forEach(el => el.classList.remove('selected'));
+  document.getElementById('gridInfo').textContent =
+    `${(state.cols * 0.5).toFixed(1)}m × ${(state.rows * 0.5).toFixed(1)}m の部屋 — クリックして家具を選択`;
+}
+
+// =====================================================
+//  パレット描画
+// =====================================================
+function renderPalette() {
+  const container = document.getElementById('paletteList');
+  container.innerHTML = '';
+  Object.entries(FURNITURE_DEFS).forEach(([key, def]) => {
+    const el = document.createElement('div');
+    el.className = 'palette-item';
+    el.dataset.type = key;
+    el.innerHTML = `
+      <span class="palette-emoji">${def.emoji}</span>
+      <span class="palette-name">${def.name}</span>
+      <span class="palette-size">${def.w}×${def.h}</span>
+    `;
+    el.addEventListener('click', () => {
+      if (placeModeType === key) {
+        exitPlaceMode();
+      } else {
+        enterPlaceMode(key);
+      }
+    });
+    container.appendChild(el);
+  });
+}
+
+// =====================================================
+//  レベルバッジ更新
+// =====================================================
+function updateLevelBadges() {
+  document.querySelectorAll('.level-badge').forEach(el => {
+    el.classList.toggle('active', parseInt(el.dataset.level) === state.level);
+  });
+}
+
+// =====================================================
+//  分析タブ描画
+// =====================================================
+function renderAnalysis() {
+  const container = document.getElementById('analysisContent');
+  if (state.furniture.length === 0) {
+    container.innerHTML = '<div class="empty-state">家具を配置すると分析が表示されます</div>';
+    return;
+  }
+
+  const threshold = getThreshold();
+  const totalCells = state.cols * state.rows;
+  const usedCells = state.furniture.reduce((sum, f) => sum + f.w * f.h, 0);
+  const usageRate = Math.round(usedCells / totalCells * 100);
+
+  // 断捨離スコア
+  const belowThreshold = state.furniture.filter(f => FURNITURE_DEFS[f.type].necessity < threshold);
+  const danshariScore = Math.round(100 - (belowThreshold.length / state.furniture.length) * 60);
+
+  // 手放しリスト
+  const dispensableItems = state.furniture.filter(f => FURNITURE_DEFS[f.type].necessity < threshold);
+
+  // レイアウトアドバイス
+  let layoutClass, layoutMsg;
+  if (usageRate > 70) {
+    const excess = Math.ceil((usedCells - totalCells * 0.7) / 4); // 粗い推定
+    layoutClass = 'bad';
+    layoutMsg = `⚠️ 家具が多く動線が確保しにくい状態です。最低でも${Math.max(1, excess)}個減らすことをお勧めします`;
+  } else if (usageRate >= 50) {
+    layoutClass = 'warn';
+    layoutMsg = '普通の使用率です。動線を意識した配置を心がけましょう';
+  } else {
+    layoutClass = 'ok';
+    layoutMsg = '✅ 理想的な空間使用率です。余白が心地よい部屋になっています';
+  }
+
+  let html = `
+    <div class="score-grid">
+      <div class="score-card">
+        <div class="score-label">断捨離スコア</div>
+        <div class="score-value">${danshariScore}<span class="score-unit">点</span></div>
+      </div>
+      <div class="score-card">
+        <div class="score-label">空間使用率</div>
+        <div class="score-value">${usageRate}<span class="score-unit">%</span></div>
+      </div>
+    </div>
+    <div class="layout-advice ${layoutClass}">${layoutMsg}</div>
+  `;
+
+  if (dispensableItems.length > 0) {
+    html += `<div class="advice-title">🗑️ 手放しを検討（${LEVEL_LABELS[state.level].text}の場合）</div>`;
+    dispensableItems.forEach(f => {
+      const def = FURNITURE_DEFS[f.type];
+      const advice = NECESSITY_ADVICE[f.type] || '本当に毎日使っていますか？';
+      html += `
+        <div class="advice-item">
+          <div class="advice-item-emoji">${def.emoji}</div>
+          <div class="advice-item-content">
+            <div class="advice-item-name">${def.name}</div>
+            <div class="advice-item-msg">${advice}</div>
+          </div>
+        </div>
+      `;
+    });
+  } else {
+    html += `<div style="margin-top:12px;padding:10px 14px;background:#e8f5e9;border-radius:10px;font-size:.85rem;color:#2e7d32;font-weight:600;">✅ 現在の断捨離レベルに最適な家具だけです！</div>`;
+  }
+
+  html += `
+    <div style="margin-top:12px; font-size:.75rem; color:var(--muted);">
+      家具数: ${state.furniture.length}点 ／ 断捨離レベル: ${LEVEL_LABELS[state.level].text}
+    </div>
+  `;
+
+  container.innerHTML = html;
+}
+
+// =====================================================
+//  保存済み部屋
+// =====================================================
+function renderSavedRooms() {
+  const container = document.getElementById('savedRoomsList');
+  if (savedRooms.length === 0) {
+    container.innerHTML = '<div class="empty-state">保存済みの部屋がありません<br><small>「現在の部屋を保存」ボタンで保存できます</small></div>';
+    return;
+  }
+  container.innerHTML = '';
+  savedRooms.forEach(room => {
+    const el = document.createElement('div');
+    el.className = 'saved-room-item';
+    el.innerHTML = `
+      <div class="saved-room-name">🏠 ${escHtml(room.name)}</div>
+      <div class="saved-room-meta">${room.date}<br>${room.state.cols}×${room.state.rows} / ${room.state.furniture.length}点</div>
+      <button class="btn-icon" data-del="${room.id}" title="削除">🗑️</button>
+    `;
+    el.addEventListener('click', (e) => {
+      if (e.target.dataset.del) return;
+      loadRoom(room.id);
+    });
+    el.querySelector('[data-del]').addEventListener('click', (e) => {
+      e.stopPropagation();
+      deleteRoom(room.id);
+    });
+    container.appendChild(el);
+  });
+}
+
+function saveCurrentRoom() {
+  if (savedRooms.length >= MAX_SAVED) {
+    showToast(`⚠️ 保存できる部屋は最大${MAX_SAVED}件です`);
+    return;
+  }
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  savedRooms.push({
+    id: genId(),
+    name: state.roomName,
+    date: dateStr,
+    state: JSON.parse(JSON.stringify(state)),
+  });
+  saveToStorage();
+  renderSavedRooms();
+  showToast(`✅ 「${state.roomName}」を保存しました`);
+}
+
+function loadRoom(id) {
+  const room = savedRooms.find(r => r.id === id);
+  if (!room) return;
+  state = JSON.parse(JSON.stringify(room.state));
+  selectedFurnitureId = null;
+  placeModeType = null;
+  document.getElementById('roomName').value = state.roomName;
+  document.getElementById('gridCols').value = state.cols;
+  document.getElementById('gridRows').value = state.rows;
+  document.getElementById('levelSlider').value = state.level;
+  updateLevelBadges();
+  renderGrid();
+  switchTab('place');
+  showToast(`📂 「${room.name}」を読み込みました`);
+}
+
+function deleteRoom(id) {
+  const room = savedRooms.find(r => r.id === id);
+  if (!room) return;
+  savedRooms = savedRooms.filter(r => r.id !== id);
+  saveToStorage();
+  renderSavedRooms();
+  showToast(`🗑️ 「${room.name}」を削除しました`);
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// =====================================================
+//  タブ切替
+// =====================================================
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tabId);
+  });
+  document.querySelectorAll('.tab-panel').forEach(panel => {
+    panel.classList.toggle('active', panel.id === `tab-${tabId}`);
+  });
+  if (tabId === 'analysis') renderAnalysis();
+  if (tabId === 'saved') renderSavedRooms();
+}
+
+// =====================================================
+//  グリッドサイズ変更
+// =====================================================
+function applyGridSize() {
+  const newCols = parseInt(document.getElementById('gridCols').value);
+  const newRows = parseInt(document.getElementById('gridRows').value);
+  if (isNaN(newCols) || isNaN(newRows)) return;
+  const cols = Math.max(4, Math.min(20, newCols));
+  const rows = Math.max(4, Math.min(16, newRows));
+  // 範囲外の家具を除去
+  state.furniture = state.furniture.filter(f =>
+    f.col + f.w <= cols && f.row + f.h <= rows
+  );
+  state.cols = cols;
+  state.rows = rows;
+  saveToStorage();
+  renderGrid();
+}
+
+// =====================================================
+//  初期化・イベント登録
+// =====================================================
+function init() {
+  loadFromStorage();
+
+  // 初期値をUIに反映
+  document.getElementById('roomName').value = state.roomName;
+  document.getElementById('gridCols').value  = state.cols;
+  document.getElementById('gridRows').value  = state.rows;
+  document.getElementById('levelSlider').value = state.level;
+
+  renderPalette();
+  updateLevelBadges();
+
+  // グリッドはリサイズ後に描画
+  setTimeout(() => {
+    renderGrid();
+  }, 0);
+
+  // ===== イベントリスナー =====
+
+  // タブ
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  });
+
+  // 部屋名
+  document.getElementById('roomName').addEventListener('input', (e) => {
+    state.roomName = e.target.value || 'リビング';
+    saveToStorage();
+  });
+
+  // グリッドサイズ
+  let gridSizeTimer = null;
+  function onGridSizeChange() {
+    if (gridSizeTimer) clearTimeout(gridSizeTimer);
+    gridSizeTimer = setTimeout(applyGridSize, 400);
+  }
+  document.getElementById('gridCols').addEventListener('input', onGridSizeChange);
+  document.getElementById('gridRows').addEventListener('input', onGridSizeChange);
+
+  // レベルスライダー
+  document.getElementById('levelSlider').addEventListener('input', (e) => {
+    state.level = parseInt(e.target.value);
+    updateLevelBadges();
+    saveToStorage();
+  });
+
+  // レベルバッジ
+  document.querySelectorAll('.level-badge').forEach(el => {
+    el.addEventListener('click', () => {
+      state.level = parseInt(el.dataset.level);
+      document.getElementById('levelSlider').value = state.level;
+      updateLevelBadges();
+      saveToStorage();
+    });
+  });
+
+  // アクションバー
+  document.getElementById('btnRotate').addEventListener('click', () => {
+    if (selectedFurnitureId) rotateFurniture(selectedFurnitureId);
+  });
+  document.getElementById('btnDelete').addEventListener('click', () => {
+    if (selectedFurnitureId) deleteFurniture(selectedFurnitureId);
+  });
+
+  // 保存ボタン
+  document.getElementById('btnSaveRoom').addEventListener('click', saveCurrentRoom);
+
+  // ESCキー
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (placeModeType) {
+        exitPlaceMode();
+      } else if (selectedFurnitureId) {
+        deselectFurniture();
+      }
+    }
+  });
+
+  // ウィンドウリサイズ時にグリッド再描画
+  let resizeTimer = null;
+  window.addEventListener('resize', () => {
+    if (resizeTimer) clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      renderGrid();
+    }, 200);
+  });
+}
+
+// =====================================================
+//  DOM Ready
+// =====================================================
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
