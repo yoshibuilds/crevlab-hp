@@ -1,37 +1,39 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="ja">
   <head>
-    <meta charset="utf-8" />
-    <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <title>冷蔵庫マネージャー</title>
-    <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
-    <style id="expo-reset">
-      /* These styles make the body full-height */
-      html,
-      body {
-        height: 100%;
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Freshbox — 冷蔵庫管理アプリ</title>
+    <meta name="description" content="冷蔵庫の食材を管理し、賞味期限切れを防ぐ。買い物リストと栄養バランスも一括管理。" />
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              cream: '#F6F2EC',
+              forest: {
+                DEFAULT: '#2E5D4B',
+                light: '#EAF2EE',
+                border: '#C5DDD3',
+              },
+              expired: {
+                bg: '#FAE8E8',
+                text: '#B33A3A',
+              },
+              warning: {
+                bg: '#FDF0E3',
+                text: '#C96C20',
+              },
+            }
+          }
+        }
       }
-      /* These styles disable body scrolling if you are using <ScrollView> */
-      body {
-        overflow: hidden;
-      }
-      /* These styles make the root element full-height */
-      #root {
-        display: flex;
-        height: 100%;
-        flex: 1;
-      }
-    </style>
-  <link rel="icon" href="./favicon.ico" /></head>
-
-  <body>
-    <!-- Use static rendering with Expo Router to support running without JavaScript. -->
-    <noscript>
-      You need to enable JavaScript to run this app.
-    </noscript>
-    <!-- The root element for your Expo app. -->
+    </script>
+    <script type="module" crossorigin src="./assets/index-B9oZVDnQ.js"></script>
+  </head>
+  <body class="bg-[#F6F2EC] min-h-screen">
     <div id="root"></div>
-  <script src="./_expo/static/js/web/index-553868b0f8c264bb057d9d756ca5fcb8.js" defer></script>
-</body>
+  </body>
 </html>
