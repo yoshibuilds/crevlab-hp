@@ -1,0 +1,2019 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>みんなのお店探し（GroupEats）| Crevlab</title>
+  <meta name="description" content="グループ全員の場所・年代・好みから、みんなに合うお店を自動提案。集合場所の決定も簡単に。">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'><circle cx='18' cy='18' r='16' fill='%237C3AED'/><text x='18' y='24' text-anchor='middle' font-size='18' fill='white'>🍽</text></svg>">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary:   #7C3AED;
+      --primary-d: #5B21B6;
+      --primary-l: #A78BFA;
+      --primary-xl:#EDE9FE;
+      --accent:    #F59E0B;
+      --accent-l:  #FEF3C7;
+      --bg:        #FAF5FF;
+      --white:     #FFFFFF;
+      --text:      #1F1235;
+      --text-mid:  #4B5563;
+      --text-light:#9CA3AF;
+      --border:    #DDD6FE;
+      --danger:    #EF4444;
+      --success:   #10B981;
+      --font: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, 'Yu Gothic', sans-serif;
+      --radius: 14px;
+      --shadow: 0 4px 20px rgba(124,58,237,0.10);
+      --shadow-hover: 0 8px 32px rgba(124,58,237,0.18);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      font-size: 15px;
+      min-height: 100vh;
+    }
+
+    a { text-decoration: none; color: inherit; }
+
+    /* ===== HEADER ===== */
+    .header {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 0 20px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 12px rgba(124,58,237,0.07);
+    }
+
+    .header-back {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--primary);
+      font-size: 14px;
+      font-weight: 600;
+      transition: opacity 0.2s;
+    }
+    .header-back:hover { opacity: 0.7; }
+    .header-back svg { width: 18px; height: 18px; }
+
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 800;
+      font-size: 15px;
+      color: var(--primary);
+    }
+    .header-logo .logo-icon {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-l));
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+
+    .header-badge {
+      font-size: 11px;
+      background: var(--primary-xl);
+      color: var(--primary);
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-weight: 700;
+    }
+
+    /* ===== MAIN WRAPPER ===== */
+    .main {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 20px 16px 60px;
+    }
+
+    /* ===== HERO ===== */
+    .hero {
+      text-align: center;
+      padding: 32px 0 24px;
+    }
+    .hero-emoji {
+      font-size: 52px;
+      line-height: 1;
+      display: block;
+      margin-bottom: 12px;
+    }
+    .hero h1 {
+      font-size: clamp(20px, 5vw, 26px);
+      font-weight: 900;
+      color: var(--primary-d);
+      line-height: 1.3;
+      margin-bottom: 8px;
+    }
+    .hero p {
+      font-size: 13px;
+      color: var(--text-mid);
+      line-height: 1.6;
+    }
+
+    /* ===== PROGRESS BAR ===== */
+    .progress-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin: 0 0 24px;
+      padding: 16px 0 0;
+    }
+    .progress-step {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      position: relative;
+    }
+    .progress-step::after {
+      content: '';
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      width: 100%;
+      height: 3px;
+      background: var(--border);
+      z-index: 0;
+    }
+    .progress-step:last-child::after { display: none; }
+    .progress-step.done::after { background: var(--primary-l); }
+    .progress-step.active::after { background: var(--border); }
+
+    .step-circle {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px;
+      font-weight: 800;
+      border: 3px solid var(--border);
+      background: var(--white);
+      color: var(--text-light);
+      position: relative;
+      z-index: 1;
+      transition: all 0.3s;
+    }
+    .progress-step.done .step-circle {
+      background: var(--primary-l);
+      border-color: var(--primary-l);
+      color: var(--white);
+    }
+    .progress-step.active .step-circle {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: var(--white);
+      box-shadow: 0 0 0 4px rgba(124,58,237,0.15);
+    }
+    .step-label {
+      font-size: 11px;
+      color: var(--text-light);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .progress-step.active .step-label { color: var(--primary); }
+    .progress-step.done .step-label { color: var(--primary-l); }
+
+    /* ===== CARD ===== */
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      margin-bottom: 16px;
+      border: 1px solid var(--border);
+    }
+    .card-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--primary-d);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-title .icon {
+      width: 28px; height: 28px;
+      background: var(--primary-xl);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+    }
+
+    /* ===== PARTY SIZE BUTTONS ===== */
+    .size-btn-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .size-btn {
+      flex: 1;
+      min-width: 80px;
+      padding: 10px 8px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      background: var(--white);
+      color: var(--text-mid);
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .size-btn:hover { border-color: var(--primary-l); color: var(--primary); }
+    .size-btn.selected {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: var(--white);
+      box-shadow: 0 4px 12px rgba(124,58,237,0.25);
+    }
+
+    /* ===== MEMBER INPUTS ===== */
+    .member-list { display: flex; flex-direction: column; gap: 12px; }
+    .member-card {
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      background: #FAFAFF;
+      position: relative;
+    }
+    .member-num {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--primary);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .member-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+    @media (max-width: 480px) {
+      .member-fields { grid-template-columns: 1fr 1fr; }
+      .member-fields .field-nickname { grid-column: 1 / -1; }
+    }
+
+    .field-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-mid);
+      margin-bottom: 4px;
+    }
+    .field-input, .field-select {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: var(--font);
+      font-size: 13px;
+      color: var(--text);
+      background: var(--white);
+      transition: border-color 0.2s;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    .field-input:focus, .field-select:focus {
+      outline: none;
+      border-color: var(--primary-l);
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
+    }
+    .select-wrap { position: relative; }
+    .select-wrap::after {
+      content: '▾';
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      font-size: 12px;
+      color: var(--text-mid);
+    }
+
+    /* ===== TOGGLE CHIPS ===== */
+    .chip-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .chip {
+      padding: 7px 14px;
+      border: 2px solid var(--border);
+      border-radius: 30px;
+      background: var(--white);
+      color: var(--text-mid);
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+    }
+    .chip:hover { border-color: var(--primary-l); color: var(--primary); }
+    .chip.selected {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: var(--white);
+    }
+    .chip.accent { border-color: var(--accent); }
+    .chip.accent.selected { background: var(--accent); border-color: var(--accent); color: var(--white); }
+
+    /* ===== BUDGET BUTTONS ===== */
+    .budget-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    @media (min-width: 480px) {
+      .budget-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+    .budget-btn {
+      padding: 12px 8px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      background: var(--white);
+      color: var(--text-mid);
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+      line-height: 1.3;
+    }
+    .budget-btn .price-sym { font-size: 16px; display: block; margin-bottom: 2px; }
+    .budget-btn .price-label { font-size: 10px; color: var(--text-light); font-weight: 600; }
+    .budget-btn:hover { border-color: var(--accent); }
+    .budget-btn.selected {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: var(--white);
+      box-shadow: 0 4px 12px rgba(245,158,11,0.25);
+    }
+    .budget-btn.selected .price-label { color: rgba(255,255,255,0.8); }
+
+    /* ===== SECTION LABEL ===== */
+    .section-label {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text-mid);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .section-label::before {
+      content: '';
+      width: 3px; height: 14px;
+      background: var(--primary);
+      border-radius: 3px;
+      display: inline-block;
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-family: var(--font);
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-d));
+      color: var(--white);
+      width: 100%;
+      box-shadow: 0 4px 16px rgba(124,58,237,0.3);
+    }
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 24px rgba(124,58,237,0.4);
+    }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-secondary {
+      background: var(--white);
+      color: var(--primary);
+      border: 2px solid var(--border);
+      font-weight: 700;
+    }
+    .btn-secondary:hover { border-color: var(--primary-l); background: var(--primary-xl); }
+    .btn-outline {
+      background: transparent;
+      color: var(--primary);
+      border: 2px solid var(--primary-l);
+      font-size: 14px;
+      padding: 10px 18px;
+    }
+    .btn-outline:hover { background: var(--primary-xl); }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    .btn-row .btn-secondary { flex: 0 0 auto; }
+    .btn-row .btn-primary { flex: 1; }
+
+    /* ===== LOADING ===== */
+    .loading-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(250,245,255,0.92);
+      z-index: 200;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+    .loading-overlay.show { display: flex; }
+    .loading-spinner {
+      width: 56px; height: 56px;
+      border: 5px solid var(--primary-xl);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--primary-d);
+      text-align: center;
+    }
+    .loading-sub {
+      font-size: 12px;
+      color: var(--text-mid);
+      margin-top: 4px;
+    }
+
+    /* ===== RESULTS ===== */
+    .result-area-banner {
+      background: linear-gradient(135deg, var(--primary), var(--primary-d));
+      color: var(--white);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 20px;
+      text-align: center;
+      box-shadow: var(--shadow-hover);
+    }
+    .result-area-banner .label {
+      font-size: 12px;
+      font-weight: 700;
+      opacity: 0.8;
+      margin-bottom: 4px;
+    }
+    .result-area-banner .area-name {
+      font-size: 28px;
+      font-weight: 900;
+      margin-bottom: 4px;
+    }
+    .result-area-banner .area-sub {
+      font-size: 12px;
+      opacity: 0.75;
+    }
+    .result-area-banner .members-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 12px;
+    }
+    .member-tag {
+      font-size: 11px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-weight: 600;
+    }
+
+    /* ===== TRENDING SECTION ===== */
+    .trending-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .trending-header h2 {
+      font-size: 17px;
+      font-weight: 900;
+      color: var(--text);
+    }
+    .trend-badge {
+      font-size: 11px;
+      background: linear-gradient(135deg, #f43f5e, #f59e0b);
+      color: var(--white);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-weight: 800;
+    }
+
+    /* ===== RESTAURANT CARD ===== */
+    .restaurant-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+    @media (min-width: 600px) {
+      .restaurant-grid.main-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .restaurant-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      border: 1.5px solid var(--border);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      transition: all 0.25s;
+      display: flex;
+      flex-direction: column;
+    }
+    .restaurant-card:hover {
+      box-shadow: var(--shadow-hover);
+      transform: translateY(-2px);
+      border-color: var(--primary-l);
+    }
+
+    .restaurant-card-header {
+      background: linear-gradient(135deg, var(--primary-xl), #F5F3FF);
+      padding: 14px 16px 10px;
+      position: relative;
+    }
+
+    .rc-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .rc-name {
+      font-size: 15px;
+      font-weight: 900;
+      color: var(--primary-d);
+      line-height: 1.3;
+    }
+    .rc-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .badge {
+      font-size: 10px;
+      font-weight: 800;
+      border-radius: 6px;
+      padding: 2px 7px;
+      white-space: nowrap;
+    }
+    .badge-cat {
+      background: var(--primary-xl);
+      color: var(--primary-d);
+    }
+    .badge-trend {
+      background: linear-gradient(135deg, #f43f5e, #f59e0b);
+      color: white;
+    }
+    .badge-classic {
+      background: var(--accent-l);
+      color: #92400E;
+    }
+
+    .rc-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--text-mid);
+      flex-wrap: wrap;
+    }
+    .rc-stars { color: #F59E0B; letter-spacing: -1px; }
+    .rc-area { display: flex; align-items: center; gap: 3px; }
+
+    .restaurant-card-body { padding: 14px 16px; flex: 1; }
+
+    .rc-distance {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--primary);
+      background: var(--primary-xl);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 9px;
+      border-radius: 20px;
+      margin-bottom: 10px;
+    }
+
+    .rc-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-bottom: 10px;
+    }
+    .rc-tag {
+      font-size: 11px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2px 8px;
+      color: var(--text-mid);
+    }
+
+    .rc-desc {
+      font-size: 12px;
+      color: var(--text-mid);
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+
+    /* ===== SNS SCORES ===== */
+    .sns-section {
+      padding: 10px 14px;
+      background: #FAFAFF;
+      border-top: 1px solid var(--border);
+    }
+    .sns-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 5px;
+    }
+    .sns-row:last-child { margin-bottom: 0; }
+    .sns-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-mid);
+      min-width: 72px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .sns-bar-wrap {
+      flex: 1;
+      background: var(--border);
+      border-radius: 4px;
+      height: 6px;
+      overflow: hidden;
+    }
+    .sns-bar {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.8s ease;
+    }
+    .sns-bar-ig { background: linear-gradient(90deg, #833ab4, #e1306c, #fd1d1d); }
+    .sns-bar-tt { background: linear-gradient(90deg, #010101, #ff0050); }
+    .sns-score {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--text-mid);
+      min-width: 28px;
+      text-align: right;
+    }
+
+    .sns-hashtags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 8px;
+    }
+    .hashtag-chip {
+      font-size: 10px;
+      color: #3B82F6;
+      background: #EFF6FF;
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-weight: 600;
+    }
+
+    .sns-timestamp {
+      font-size: 10px;
+      color: var(--text-light);
+      margin-top: 6px;
+    }
+
+    /* ===== MAPS LINK ===== */
+    .rc-maps-link {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--primary);
+      text-decoration: none;
+      margin-top: 10px;
+      padding: 8px 12px;
+      background: var(--primary-xl);
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+    .rc-maps-link:hover { background: #DDD6FE; }
+
+    /* ===== DISCLAIMER ===== */
+    .disclaimer {
+      font-size: 11px;
+      color: var(--text-light);
+      padding: 12px 16px;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      line-height: 1.5;
+    }
+
+    /* ===== RESULT ACTIONS ===== */
+    .result-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    /* ===== UTILITY ===== */
+    .hidden { display: none !important; }
+    .mt-8 { margin-top: 8px; }
+    .mt-16 { margin-top: 16px; }
+
+    /* ===== FADE IN ===== */
+    .fade-in {
+      animation: fadeIn 0.4s ease both;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== SCORE RANK ===== */
+    .rank-ribbon {
+      position: absolute;
+      top: 0;
+      right: 16px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-d));
+      color: white;
+      font-size: 11px;
+      font-weight: 900;
+      padding: 4px 10px 6px;
+      border-radius: 0 0 8px 8px;
+    }
+
+    /* ===== PRICE STARS ===== */
+    .price-sym {
+      color: var(--accent);
+      font-weight: 800;
+    }
+
+    /* ===== NO RESULT ===== */
+    .no-result {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-mid);
+    }
+    .no-result .no-result-icon { font-size: 48px; margin-bottom: 12px; }
+
+    /* ===== SECTION DIVIDER ===== */
+    .section-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 20px 0;
+    }
+
+    /* ===== SCORE BAR ===== */
+    .match-score-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .match-score-bar .bar-track {
+      flex: 1;
+      height: 4px;
+      background: var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .match-score-bar .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--primary-l), var(--primary));
+    }
+    .match-score-bar .score-text {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--primary);
+      min-width: 32px;
+    }
+    .match-score-bar .score-label {
+      font-size: 10px;
+      color: var(--text-light);
+      min-width: 52px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <a href="../" class="header-back">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M15 18l-6-6 6-6"/>
+    </svg>
+    Crevlab
+  </a>
+  <div class="header-logo">
+    <div class="logo-icon">🍽</div>
+    GroupEats
+  </div>
+  <span class="header-badge">β版</span>
+</header>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">
+    お店を探しています…
+    <div class="loading-sub">グループ全員の条件を分析中 ✨</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- HERO -->
+  <div class="hero">
+    <span class="hero-emoji">🍜</span>
+    <h1>みんなのお店探し<br><span style="font-size:0.8em;opacity:0.8">GroupEats</span></h1>
+    <p>グループ全員の場所・年代・好みから、<br>みんなに合うお店を自動でご提案。</p>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="progress-wrap" id="progressBar">
+    <div class="progress-step active" id="prog1">
+      <div class="step-circle">1</div>
+      <div class="step-label">グループ</div>
+    </div>
+    <div class="progress-step" id="prog2">
+      <div class="step-circle">2</div>
+      <div class="step-label">条件</div>
+    </div>
+    <div class="progress-step" id="prog3">
+      <div class="step-circle">3</div>
+      <div class="step-label">結果</div>
+    </div>
+  </div>
+
+  <!-- ===== STEP 1 ===== -->
+  <div id="step1" class="fade-in">
+    <div class="card">
+      <div class="card-title">
+        <div class="icon">👥</div>
+        グループ設定
+      </div>
+
+      <div class="section-label">人数を選択</div>
+      <div class="size-btn-grid" id="sizeBtnGrid">
+        <button class="size-btn" data-size="2" onclick="selectSize(2)">2人</button>
+        <button class="size-btn" data-size="3" onclick="selectSize(3)">3人</button>
+        <button class="size-btn" data-size="4" onclick="selectSize(4)">4人</button>
+        <button class="size-btn" data-size="5" onclick="selectSize(5)">5人</button>
+        <button class="size-btn" data-size="6" onclick="selectSize(6)">6人以上</button>
+      </div>
+
+      <div id="memberList" class="member-list hidden">
+        <!-- dynamic -->
+      </div>
+
+      <div class="btn-row mt-16" id="step1Next" style="display:none">
+        <button class="btn btn-primary" onclick="goToStep2()">次へ →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== STEP 2 ===== -->
+  <div id="step2" class="hidden fade-in">
+    <div class="card">
+      <div class="card-title">
+        <div class="icon">🍴</div>
+        食べ物・条件
+      </div>
+
+      <div class="section-label">食べ物の系統（複数選択可）</div>
+      <div class="chip-grid" id="foodChips">
+        <button class="chip" data-food="和食" onclick="toggleFood(this)">和食</button>
+        <button class="chip" data-food="焼肉・BBQ" onclick="toggleFood(this)">焼肉・BBQ</button>
+        <button class="chip" data-food="寿司" onclick="toggleFood(this)">寿司</button>
+        <button class="chip" data-food="ラーメン" onclick="toggleFood(this)">ラーメン</button>
+        <button class="chip" data-food="居酒屋" onclick="toggleFood(this)">居酒屋</button>
+        <button class="chip" data-food="イタリアン" onclick="toggleFood(this)">イタリアン</button>
+        <button class="chip" data-food="フレンチ" onclick="toggleFood(this)">フレンチ</button>
+        <button class="chip" data-food="中華" onclick="toggleFood(this)">中華</button>
+        <button class="chip" data-food="カフェ" onclick="toggleFood(this)">カフェ</button>
+        <button class="chip" data-food="エスニック" onclick="toggleFood(this)">エスニック</button>
+        <button class="chip" data-food="なんでもOK" onclick="toggleFood(this)">なんでもOK 🙆</button>
+      </div>
+
+      <div class="section-label">予算感</div>
+      <div class="budget-grid" id="budgetBtns">
+        <button class="budget-btn" data-budget="1" onclick="selectBudget(1)">
+          <span class="price-sym">¥</span>
+          <span class="price-label">〜1,500円</span>
+        </button>
+        <button class="budget-btn" data-budget="2" onclick="selectBudget(2)">
+          <span class="price-sym">¥¥</span>
+          <span class="price-label">1,500〜3,000</span>
+        </button>
+        <button class="budget-btn" data-budget="3" onclick="selectBudget(3)">
+          <span class="price-sym">¥¥¥</span>
+          <span class="price-label">3,000〜6,000</span>
+        </button>
+        <button class="budget-btn" data-budget="4" onclick="selectBudget(4)">
+          <span class="price-sym">¥¥¥¥</span>
+          <span class="price-label">6,000円〜</span>
+        </button>
+      </div>
+
+      <div class="section-label">重視すること（複数選択可）</div>
+      <div class="chip-grid" id="priorityChips">
+        <button class="chip accent" data-priority="雰囲気" onclick="togglePriority(this)">雰囲気</button>
+        <button class="chip accent" data-priority="味優先" onclick="togglePriority(this)">味優先</button>
+        <button class="chip accent" data-priority="話題のお店" onclick="togglePriority(this)">話題のお店</button>
+        <button class="chip accent" data-priority="コスパ重視" onclick="togglePriority(this)">コスパ重視</button>
+        <button class="chip accent" data-priority="個室あり" onclick="togglePriority(this)">個室あり</button>
+        <button class="chip accent" data-priority="静かな席" onclick="togglePriority(this)">静かな席</button>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="goToStep1()">← 戻る</button>
+        <button class="btn btn-primary" onclick="doSearch()">お店を探す 🔍</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== STEP 3 ===== -->
+  <div id="step3" class="hidden fade-in">
+
+    <!-- Area Banner -->
+    <div class="result-area-banner" id="areaBanner">
+      <div class="label">📍 おすすめ集合エリア</div>
+      <div class="area-name" id="areaName">—</div>
+      <div class="area-sub" id="areaSub">全員の中間地点から計算</div>
+      <div class="members-row" id="membersRow"></div>
+    </div>
+
+    <!-- Trending Section -->
+    <div id="trendingSection">
+      <div class="trending-header">
+        <h2>🔥 今話題のお店</h2>
+        <span class="trend-badge">SNS急上昇</span>
+      </div>
+      <div class="restaurant-grid" id="trendingGrid"></div>
+      <div class="section-divider"></div>
+    </div>
+
+    <!-- Main Results -->
+    <div class="trending-header">
+      <h2>⭐ グループにおすすめ</h2>
+    </div>
+    <div class="restaurant-grid main-grid" id="mainGrid"></div>
+
+    <!-- Actions -->
+    <div class="result-actions">
+      <button class="btn btn-outline" onclick="goToStep2()">← 条件を変更する</button>
+      <button class="btn btn-secondary" onclick="resetAll()">🔄 もう一度探す</button>
+    </div>
+
+    <!-- SNS Disclaimer -->
+    <p style="font-size:11px;color:var(--text-light);margin-top:16px;line-height:1.6;text-align:center;">
+      ※ SNSトレンドデータは参考値です。リアルタイム連携にはサーバーが必要です。<br>
+      ※ 掲載情報は架空のサンプルデータです。実際の営業状況とは異なります。
+    </p>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+'use strict';
+
+/* ============================================================
+   DATA
+============================================================ */
+
+const AREAS = {
+  '渋谷':         {x:50, y:60},
+  '新宿':         {x:45, y:52},
+  '池袋':         {x:43, y:38},
+  '銀座':         {x:62, y:58},
+  '秋葉原':       {x:65, y:48},
+  '六本木':       {x:52, y:65},
+  '原宿・表参道': {x:49, y:58},
+  '恵比寿':       {x:50, y:68},
+  '下北沢':       {x:44, y:65},
+  '浅草':         {x:72, y:42},
+  '上野':         {x:68, y:44},
+  '品川':         {x:58, y:72},
+  '横浜':         {x:52, y:85},
+  '吉祥寺':       {x:35, y:50},
+  '中野':         {x:40, y:52},
+  '梅田(大阪)':   {x:5,  y:50},
+  'なんば(大阪)': {x:6,  y:58},
+  '心斎橋':       {x:6,  y:56},
+  '名古屋栄':     {x:28, y:52},
+  '京都河原町':   {x:15, y:48},
+  '福岡天神':     {x:-30,y:55},
+  '札幌すすきの': {x:80, y:5},
+  'その他':       {x:50, y:50}
+};
+
+const PRICE_SYMS = ['', '¥', '¥¥', '¥¥¥', '¥¥¥¥'];
+
+const RESTAURANTS = [
+  {
+    id: 1,
+    name: '炭火焼鳥 鶴亀',
+    area: '渋谷',
+    category: '居酒屋',
+    ageTarget: ['20代','30代'],
+    minParty: 2, maxParty: 8,
+    priceLevel: 2,
+    rating: 4.3,
+    reviewCount: 312,
+    tags: ['炭火焼き','こだわり日本酒','半個室'],
+    instagramScore: 72,
+    tiktokScore: 58,
+    description: '全国から厳選した地鶏を炭火で丁寧に焼き上げる。隠れ家的な雰囲気と豊富な地酒が魅力。',
+    hashtags: ['#渋谷グルメ','#焼き鳥','#日本酒好き','#隠れ家居酒屋'],
+    lastTrended: '2026/05/18'
+  },
+  {
+    id: 2,
+    name: 'PASTA ROSSO',
+    area: '六本木',
+    category: 'イタリアン',
+    ageTarget: ['30代','40代以上'],
+    minParty: 2, maxParty: 6,
+    priceLevel: 3,
+    rating: 4.6,
+    reviewCount: 488,
+    tags: ['パスタ専門','ワインリスト充実','デート向き'],
+    instagramScore: 88,
+    tiktokScore: 65,
+    description: 'イタリア産小麦を使った手打ちパスタと季節野菜の組み合わせが絶品。ソムリエ厳選ワインも人気。',
+    hashtags: ['#六本木ディナー','#手打ちパスタ','#イタリアン','#ワイン好き','#インスタ映え'],
+    lastTrended: '2026/05/20'
+  },
+  {
+    id: 3,
+    name: '麺屋 極 新宿本店',
+    area: '新宿',
+    category: 'ラーメン',
+    ageTarget: ['10代','20代','30代'],
+    minParty: 1, maxParty: 4,
+    priceLevel: 1,
+    rating: 4.4,
+    reviewCount: 1204,
+    tags: ['濃厚豚骨','替え玉無料','行列必至'],
+    instagramScore: 81,
+    tiktokScore: 92,
+    description: '48時間煮込んだ豚骨スープは濃厚でクリーミー。TikTokで話題沸騰の映えるビジュアルも必見。',
+    hashtags: ['#新宿ラーメン','#豚骨ラーメン','#TikTokグルメ','#行列グルメ','#ラーメン好き'],
+    lastTrended: '2026/05/21'
+  },
+  {
+    id: 4,
+    name: '銀座 寿し 一',
+    area: '銀座',
+    category: '寿司',
+    ageTarget: ['30代','40代以上'],
+    minParty: 2, maxParty: 10,
+    priceLevel: 4,
+    rating: 4.8,
+    reviewCount: 273,
+    tags: ['おまかせコース','江戸前寿司','特別な日に'],
+    instagramScore: 55,
+    tiktokScore: 30,
+    description: '40年の歴史を誇る老舗江戸前寿司。厳選した旬のネタと職人の技が生み出す至高の一皿。',
+    hashtags: ['#銀座グルメ','#江戸前寿司','#おまかせ','#特別な日'],
+    lastTrended: '2026/04/15'
+  },
+  {
+    id: 5,
+    name: 'Korean BBQ ソウル苑',
+    area: '新宿',
+    category: '焼肉・BBQ',
+    ageTarget: ['20代','30代'],
+    minParty: 2, maxParty: 8,
+    priceLevel: 2,
+    rating: 4.2,
+    reviewCount: 567,
+    tags: ['食べ放題あり','タッカルビ','韓国料理'],
+    instagramScore: 76,
+    tiktokScore: 84,
+    description: '本場韓国直輸入の秘伝タレで漬け込んだ肉が絶品。インスタ映えする盛り付けとコスパの良さで人気急上昇中。',
+    hashtags: ['#新宿焼肉','#韓国料理','#食べ放題','#コスパ最高','#TikTok飯'],
+    lastTrended: '2026/05/19'
+  },
+  {
+    id: 6,
+    name: 'CAFÉ VIOLET',
+    area: '原宿・表参道',
+    category: 'カフェ',
+    ageTarget: ['10代','20代'],
+    minParty: 1, maxParty: 6,
+    priceLevel: 2,
+    rating: 4.1,
+    reviewCount: 892,
+    tags: ['フォトジェニック','スイーツ充実','外国語メニューあり'],
+    instagramScore: 97,
+    tiktokScore: 89,
+    description: 'パリ発のカフェブランドが初上陸。紫をテーマにしたインテリアと季節のパフェがSNSで大バズり中。',
+    hashtags: ['#表参道カフェ','#インスタ映え','#パフェ','#おしゃれカフェ','#カフェ巡り'],
+    lastTrended: '2026/05/22'
+  },
+  {
+    id: 7,
+    name: '大衆酒場 ととや',
+    area: '下北沢',
+    category: '居酒屋',
+    ageTarget: ['20代','30代'],
+    minParty: 2, maxParty: 10,
+    priceLevel: 1,
+    rating: 4.0,
+    reviewCount: 423,
+    tags: ['コスパ最高','賑やか','ホッピー'],
+    instagramScore: 42,
+    tiktokScore: 35,
+    description: '昭和の雰囲気が漂う大衆酒場。100円台からの豊富なおつまみと冷えた生ビールが疲れた体に染みる。',
+    hashtags: ['#下北沢グルメ','#大衆酒場','#コスパ飯','#昭和レトロ'],
+    lastTrended: '2026/03/10'
+  },
+  {
+    id: 8,
+    name: '台湾小吃 阿里山',
+    area: '中野',
+    category: 'エスニック',
+    ageTarget: ['20代','30代'],
+    minParty: 1, maxParty: 6,
+    priceLevel: 1,
+    rating: 4.3,
+    reviewCount: 345,
+    tags: ['台湾料理','ルーロー飯','豆花'],
+    instagramScore: 68,
+    tiktokScore: 77,
+    description: '台湾人オーナーが作る本場の味。ルーロー飯と豆花は絶品で、行列が絶えない人気店。',
+    hashtags: ['#中野グルメ','#台湾料理','#ルーロー飯','#エスニック','#アジア飯'],
+    lastTrended: '2026/05/10'
+  },
+  {
+    id: 9,
+    name: 'BISTRO PARIS 恵比寿',
+    area: '恵比寿',
+    category: 'フレンチ',
+    ageTarget: ['30代','40代以上'],
+    minParty: 2, maxParty: 8,
+    priceLevel: 3,
+    rating: 4.5,
+    reviewCount: 198,
+    tags: ['カジュアルフレンチ','コースのみ','個室完備'],
+    instagramScore: 79,
+    tiktokScore: 44,
+    description: 'パリで修業したシェフによるカジュアルフレンチ。産地直送の食材を使ったコース料理が大人気。',
+    hashtags: ['#恵比寿ディナー','#フレンチ','#コース料理','#デート','#大人の外食'],
+    lastTrended: '2026/05/05'
+  },
+  {
+    id: 10,
+    name: '中華料理 龍鳳閣',
+    area: '池袋',
+    category: '中華',
+    ageTarget: ['10代','20代','30代','40代以上'],
+    minParty: 2, maxParty: 20,
+    priceLevel: 2,
+    rating: 4.2,
+    reviewCount: 734,
+    tags: ['宴会可','食べ放題','本格中華'],
+    instagramScore: 50,
+    tiktokScore: 38,
+    description: '創業30年の本格中華。北京ダックや麻婆豆腐など定番から本格料理まで揃い、大人数にも対応。',
+    hashtags: ['#池袋グルメ','#中華料理','#北京ダック','#宴会','#コスパ'],
+    lastTrended: '2026/02/20'
+  },
+  {
+    id: 11,
+    name: '牛たん 伊達屋',
+    area: '秋葉原',
+    category: '和食',
+    ageTarget: ['20代','30代','40代以上'],
+    minParty: 1, maxParty: 8,
+    priceLevel: 2,
+    rating: 4.4,
+    reviewCount: 621,
+    tags: ['牛たん専門','麦飯食べ放題','仙台直送'],
+    instagramScore: 65,
+    tiktokScore: 71,
+    description: '仙台から直送する牛たんを炭火で丁寧に焼き上げる。麦飯・テールスープとのセットが王道の旨さ。',
+    hashtags: ['#秋葉原グルメ','#牛たん','#仙台名物','#炭火焼','#肉好き'],
+    lastTrended: '2026/05/15'
+  },
+  {
+    id: 12,
+    name: 'なにわ串カツ 道頓堀',
+    area: 'なんば(大阪)',
+    category: '和食',
+    ageTarget: ['10代','20代','30代','40代以上'],
+    minParty: 1, maxParty: 6,
+    priceLevel: 1,
+    rating: 4.1,
+    reviewCount: 1087,
+    tags: ['串カツ','二度漬け禁止','大阪B級グルメ'],
+    instagramScore: 69,
+    tiktokScore: 80,
+    description: '大阪のソウルフード・串カツを本場の味で。揚げたてサクサクの串カツを専用ソースでどうぞ（二度漬け禁止）。',
+    hashtags: ['#なんばグルメ','#串カツ','#大阪B級','#道頓堀','#食い倒れ'],
+    lastTrended: '2026/05/12'
+  },
+  {
+    id: 13,
+    name: '鉄板焼 梅田 一鉄',
+    area: '梅田(大阪)',
+    category: '焼肉・BBQ',
+    ageTarget: ['30代','40代以上'],
+    minParty: 2, maxParty: 8,
+    priceLevel: 4,
+    rating: 4.7,
+    reviewCount: 156,
+    tags: ['鉄板焼き','個室完備','記念日に'],
+    instagramScore: 61,
+    tiktokScore: 28,
+    description: '目の前で職人が焼き上げる鉄板焼のエンターテイメント。神戸牛A5ランクを贅沢に堪能できる特別な体験。',
+    hashtags: ['#梅田グルメ','#鉄板焼','#神戸牛','#記念日','#贅沢ごはん'],
+    lastTrended: '2026/04/28'
+  },
+  {
+    id: 14,
+    name: 'らーめん 吉祥寺 雲の上',
+    area: '吉祥寺',
+    category: 'ラーメン',
+    ageTarget: ['10代','20代','30代'],
+    minParty: 1, maxParty: 4,
+    priceLevel: 1,
+    rating: 4.5,
+    reviewCount: 887,
+    tags: ['鶏白湯','つけ麺','麺通必訪'],
+    instagramScore: 74,
+    tiktokScore: 83,
+    description: '12時間煮出した鶏白湯スープは濃厚でまろやか。麺との絡みが絶妙で、つけ麺も大人気の一品。',
+    hashtags: ['#吉祥寺グルメ','#ラーメン','#鶏白湯','#つけ麺','#麺活'],
+    lastTrended: '2026/05/16'
+  },
+  {
+    id: 15,
+    name: 'スカイダイニング浅草',
+    area: '浅草',
+    category: '和食',
+    ageTarget: ['30代','40代以上'],
+    minParty: 2, maxParty: 12,
+    priceLevel: 3,
+    rating: 4.3,
+    reviewCount: 312,
+    tags: ['夜景','懐石料理','スカイツリービュー'],
+    instagramScore: 85,
+    tiktokScore: 60,
+    description: 'スカイツリーを望む絶景レストラン。旬の食材を使った創作懐石料理と非日常の景色が楽しめる。',
+    hashtags: ['#浅草グルメ','#スカイツリー','#夜景ディナー','#懐石','#インスタ映え'],
+    lastTrended: '2026/05/08'
+  },
+  {
+    id: 16,
+    name: 'しゃぶしゃぶ 葉月',
+    area: '上野',
+    category: '和食',
+    ageTarget: ['20代','30代','40代以上'],
+    minParty: 2, maxParty: 10,
+    priceLevel: 3,
+    rating: 4.4,
+    reviewCount: 445,
+    tags: ['しゃぶしゃぶ専門','個室あり','ヘルシー'],
+    instagramScore: 58,
+    tiktokScore: 42,
+    description: '黒毛和牛のしゃぶしゃぶが上品な出汁で引き立つ。個室完備で接待・女子会・記念日にも最適。',
+    hashtags: ['#上野グルメ','#しゃぶしゃぶ','#和牛','#個室','#ヘルシーごはん'],
+    lastTrended: '2026/04/22'
+  },
+  {
+    id: 17,
+    name: 'ピッツェリア NAPOLI',
+    area: '品川',
+    category: 'イタリアン',
+    ageTarget: ['20代','30代'],
+    minParty: 2, maxParty: 8,
+    priceLevel: 2,
+    rating: 4.2,
+    reviewCount: 523,
+    tags: ['ナポリピザ','窯焼き','テイクアウト可'],
+    instagramScore: 78,
+    tiktokScore: 67,
+    description: 'ナポリ出身のピザ職人が薪窯で焼くマルゲリータは絶品。もちもちの生地と濃厚なトマトソースが相性抜群。',
+    hashtags: ['#品川グルメ','#ナポリピザ','#ピッツェリア','#イタリアン','#窯焼きピザ'],
+    lastTrended: '2026/05/07'
+  },
+  {
+    id: 18,
+    name: '立ち飲み酒場 横浜',
+    area: '横浜',
+    category: '居酒屋',
+    ageTarget: ['20代','30代','40代以上'],
+    minParty: 2, maxParty: 15,
+    priceLevel: 1,
+    rating: 3.9,
+    reviewCount: 678,
+    tags: ['立ち飲み','港町','海鮮'],
+    instagramScore: 40,
+    tiktokScore: 48,
+    description: '横浜港を望むロケーションで味わう海鮮立ち飲み。地元漁師から直接仕入れた鮮魚が自慢の賑やか酒場。',
+    hashtags: ['#横浜グルメ','#立ち飲み','#海鮮','#港町','#居酒屋好き'],
+    lastTrended: '2026/03/30'
+  },
+  {
+    id: 19,
+    name: 'curry&spice 京都',
+    area: '京都河原町',
+    category: 'エスニック',
+    ageTarget: ['20代','30代'],
+    minParty: 1, maxParty: 4,
+    priceLevel: 2,
+    rating: 4.3,
+    reviewCount: 412,
+    tags: ['スパイスカレー','ベジタリアン対応','コーヒー専門家監修'],
+    instagramScore: 80,
+    tiktokScore: 73,
+    description: '京野菜をたっぷり使ったスパイスカレーが人気。インド・スリランカのスパイスをブレンドした複雑な旨みが癖になる。',
+    hashtags: ['#京都グルメ','#スパイスカレー','#カレー好き','#ベジタリアン','#河原町'],
+    lastTrended: '2026/05/14'
+  },
+  {
+    id: 20,
+    name: '名古屋 手羽先 山ちゃん 栄店',
+    area: '名古屋栄',
+    category: '居酒屋',
+    ageTarget: ['10代','20代','30代','40代以上'],
+    minParty: 2, maxParty: 10,
+    priceLevel: 1,
+    rating: 4.1,
+    reviewCount: 1345,
+    tags: ['手羽先','名古屋めし','賑やか'],
+    instagramScore: 55,
+    tiktokScore: 62,
+    description: '名古屋名物・世界の山ちゃんの秘伝スパイスが効いた手羽先は一度食べたら病みつき。名古屋に来たら必訪の一軒。',
+    hashtags: ['#名古屋グルメ','#手羽先','#名古屋めし','#栄','#居酒屋'],
+    lastTrended: '2026/05/01'
+  },
+  {
+    id: 21,
+    name: 'BIO CAFÉ 表参道',
+    area: '原宿・表参道',
+    category: 'カフェ',
+    ageTarget: ['20代','30代'],
+    minParty: 1, maxParty: 6,
+    priceLevel: 2,
+    rating: 4.4,
+    reviewCount: 634,
+    tags: ['オーガニック','ヴィーガン対応','テラス席'],
+    instagramScore: 91,
+    tiktokScore: 76,
+    description: '有機農場直送の食材を使ったヘルシーフード。テラス席でのんびりランチからヴィーガンスイーツまで大充実。',
+    hashtags: ['#表参道カフェ','#オーガニック','#ヴィーガン','#テラス席','#ヘルシーフード'],
+    lastTrended: '2026/05/20'
+  },
+  {
+    id: 22,
+    name: '焼肉 炎 下北沢',
+    area: '下北沢',
+    category: '焼肉・BBQ',
+    ageTarget: ['20代','30代'],
+    minParty: 2, maxParty: 6,
+    priceLevel: 2,
+    rating: 4.2,
+    reviewCount: 356,
+    tags: ['コスパ最高','サガリ','国産牛'],
+    instagramScore: 64,
+    tiktokScore: 78,
+    description: 'おしゃれな下北沢で食べる本格焼肉。国産牛を使ったお手頃コースが充実し、若者に絶大な人気を誇る。',
+    hashtags: ['#下北沢グルメ','#焼肉','#コスパ最高','#国産牛','#肉好き'],
+    lastTrended: '2026/05/11'
+  },
+  {
+    id: 23,
+    name: 'もつ鍋 博多屋 福岡',
+    area: '福岡天神',
+    category: '和食',
+    ageTarget: ['20代','30代','40代以上'],
+    minParty: 2, maxParty: 10,
+    priceLevel: 2,
+    rating: 4.5,
+    reviewCount: 892,
+    tags: ['もつ鍋','博多名物','締めのちゃんぽん'],
+    instagramScore: 66,
+    tiktokScore: 74,
+    description: '博多の本場もつ鍋を天神で。コクのある醤油ベースのスープとぷりぷりモツの組み合わせは絶品。締めのちゃんぽんも必食。',
+    hashtags: ['#福岡グルメ','#もつ鍋','#博多名物','#天神','#鍋好き'],
+    lastTrended: '2026/05/09'
+  },
+  {
+    id: 24,
+    name: '寿司バル SUSHI WAVE',
+    area: '渋谷',
+    category: '寿司',
+    ageTarget: ['20代','30代'],
+    minParty: 2, maxParty: 10,
+    priceLevel: 2,
+    rating: 4.1,
+    reviewCount: 728,
+    tags: ['立ち寿司','モダン和食','シャンパン×寿司'],
+    instagramScore: 88,
+    tiktokScore: 82,
+    description: '渋谷発の次世代スタンディング寿司バル。トリュフ寿司やフォアグラ軍艦など創作寿司がSNSで話題爆発中。',
+    hashtags: ['#渋谷グルメ','#創作寿司','#寿司バル','#インスタ映え','#トレンドグルメ'],
+    lastTrended: '2026/05/22'
+  },
+  {
+    id: 25,
+    name: 'すすきの 蟹料理 北海道',
+    area: '札幌すすきの',
+    category: '和食',
+    ageTarget: ['30代','40代以上'],
+    minParty: 2, maxParty: 8,
+    priceLevel: 3,
+    rating: 4.6,
+    reviewCount: 423,
+    tags: ['毛蟹','ウニ','北海道直送'],
+    instagramScore: 60,
+    tiktokScore: 45,
+    description: '北海道の豊かな海の幸を贅沢に堪能。朝獲れの毛蟹・ウニ・ホタテを本場の味付けで楽しめる名店。',
+    hashtags: ['#札幌グルメ','#蟹料理','#北海道グルメ','#ウニ','#海鮮'],
+    lastTrended: '2026/04/10'
+  },
+  {
+    id: 26,
+    name: 'タコス&メキシカン FIESTA',
+    area: '渋谷',
+    category: 'エスニック',
+    ageTarget: ['10代','20代','30代'],
+    minParty: 2, maxParty: 12,
+    priceLevel: 2,
+    rating: 3.9,
+    reviewCount: 445,
+    tags: ['メキシカン','タコス','テキーラ充実'],
+    instagramScore: 76,
+    tiktokScore: 88,
+    description: 'メキシコ人シェフが本場の味を再現したタコス専門店。カラフルな盛り付けとテキーラカクテルがTikTokで大人気。',
+    hashtags: ['#渋谷グルメ','#タコス','#メキシカン','#テキーラ','#TikTok飯'],
+    lastTrended: '2026/05/21'
+  },
+  {
+    id: 27,
+    name: '鉄板ハンバーグ ROKKO',
+    area: '恵比寿',
+    category: '和食',
+    ageTarget: ['20代','30代','40代以上'],
+    minParty: 1, maxParty: 6,
+    priceLevel: 2,
+    rating: 4.5,
+    reviewCount: 918,
+    tags: ['ハンバーグ専門','肉汁あふれる','和風ソース'],
+    instagramScore: 82,
+    tiktokScore: 79,
+    description: '鉄板の上で目の前でじゅわっと割れる肉汁ハンバーグ。和風ポン酢ソースとの相性が抜群で行列が絶えない。',
+    hashtags: ['#恵比寿グルメ','#ハンバーグ','#肉汁','#インスタ映え','#肉好き'],
+    lastTrended: '2026/05/17'
+  },
+  {
+    id: 28,
+    name: '心斎橋 たこ焼き 蛸道',
+    area: '心斎橋',
+    category: 'エスニック',
+    ageTarget: ['10代','20代','30代'],
+    minParty: 1, maxParty: 10,
+    priceLevel: 1,
+    rating: 4.0,
+    reviewCount: 1560,
+    tags: ['たこ焼き','B級グルメ','食べ歩き'],
+    instagramScore: 63,
+    tiktokScore: 71,
+    description: '心斎橋の老舗たこ焼き店。外はカリッと中はとろとろの秘伝のたこ焼きは大阪観光に欠かせない一品。',
+    hashtags: ['#心斎橋','#たこ焼き','#大阪グルメ','#B級グルメ','#食べ歩き'],
+    lastTrended: '2026/05/03'
+  }
+];
+
+/* ============================================================
+   STATE
+============================================================ */
+const state = {
+  step: 1,
+  partySize: null,
+  members: [],
+  selectedFoods: new Set(),
+  selectedBudget: null,
+  selectedPriorities: new Set(),
+  results: []
+};
+
+/* ============================================================
+   UTILS
+============================================================ */
+function dist(a, b) {
+  const ax = AREAS[a] ? AREAS[a].x : 50;
+  const ay = AREAS[a] ? AREAS[a].y : 50;
+  const bx = typeof b === 'object' ? b.x : (AREAS[b] ? AREAS[b].x : 50);
+  const by = typeof b === 'object' ? b.y : (AREAS[b] ? AREAS[b].y : 50);
+  return Math.sqrt((ax - bx) ** 2 + (ay - by) ** 2);
+}
+
+function centroid(areas) {
+  let sx = 0, sy = 0, n = 0;
+  for (const a of areas) {
+    const c = AREAS[a];
+    if (c) { sx += c.x; sy += c.y; n++; }
+  }
+  if (n === 0) return {x: 50, y: 50};
+  return {x: sx / n, y: sy / n};
+}
+
+function findClosestArea(cx, cy) {
+  let best = 'その他', bestD = Infinity;
+  for (const [name, coord] of Object.entries(AREAS)) {
+    const d = Math.sqrt((coord.x - cx) ** 2 + (coord.y - cy) ** 2);
+    if (d < bestD) { bestD = d; best = name; }
+  }
+  return best;
+}
+
+function stars(rating) {
+  const full = Math.floor(rating);
+  const half = rating % 1 >= 0.5;
+  let s = '★'.repeat(full);
+  if (half) s += '☆';
+  return s;
+}
+
+function priceSymbol(level) {
+  return PRICE_SYMS[level] || '¥';
+}
+
+function distanceLabel(restaurant, centerCoord) {
+  const d = dist(restaurant.area, centerCoord);
+  if (d < 5) return '集合地点付近';
+  if (d < 12) return `約${Math.round(d)}分圏内`;
+  if (d < 25) return `やや遠め（約${Math.round(d * 1.5)}分）`;
+  return `遠め（別エリア）`;
+}
+
+/* ============================================================
+   PROGRESS UI
+============================================================ */
+function setProgress(step) {
+  for (let i = 1; i <= 3; i++) {
+    const el = document.getElementById('prog' + i);
+    el.classList.remove('active', 'done');
+    if (i < step) el.classList.add('done');
+    if (i === step) el.classList.add('active');
+  }
+}
+
+/* ============================================================
+   STEP 1
+============================================================ */
+function selectSize(n) {
+  state.partySize = n;
+  document.querySelectorAll('.size-btn').forEach(b => {
+    b.classList.toggle('selected', parseInt(b.dataset.size) === n);
+  });
+  buildMemberInputs(n);
+  document.getElementById('memberList').classList.remove('hidden');
+  document.getElementById('step1Next').style.display = 'flex';
+}
+
+function buildMemberInputs(n) {
+  const container = document.getElementById('memberList');
+  container.innerHTML = '';
+  state.members = [];
+  for (let i = 0; i < n; i++) {
+    state.members.push({ nickname: '', area: 'その他', age: '20代' });
+    const div = document.createElement('div');
+    div.className = 'member-card';
+    div.innerHTML = `
+      <div class="member-num">メンバー ${i + 1}</div>
+      <div class="member-fields">
+        <div class="field-nickname">
+          <div class="field-label">ニックネーム（任意）</div>
+          <input class="field-input" type="text" placeholder="例：田中" maxlength="10"
+            oninput="updateMember(${i}, 'nickname', this.value)">
+        </div>
+        <div>
+          <div class="field-label">エリア</div>
+          <div class="select-wrap">
+            <select class="field-select" onchange="updateMember(${i}, 'area', this.value)">
+              ${Object.keys(AREAS).map(a => `<option value="${a}"${a==='その他'?' selected':''}>${a}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div>
+          <div class="field-label">年代</div>
+          <div class="select-wrap">
+            <select class="field-select" onchange="updateMember(${i}, 'age', this.value)">
+              <option value="10代">10代</option>
+              <option value="20代" selected>20代</option>
+              <option value="30代">30代</option>
+              <option value="40代以上">40代以上</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    `;
+    container.appendChild(div);
+  }
+}
+
+function updateMember(i, field, val) {
+  if (state.members[i]) state.members[i][field] = val;
+}
+
+function goToStep1() {
+  document.getElementById('step1').classList.remove('hidden');
+  document.getElementById('step2').classList.add('hidden');
+  document.getElementById('step3').classList.add('hidden');
+  state.step = 1;
+  setProgress(1);
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function goToStep2() {
+  if (state.step === 1) {
+    if (!state.partySize) { alert('人数を選択してください。'); return; }
+    const areas = state.members.map(m => m.area);
+    if (areas.every(a => a === 'その他')) {
+      // OK, centroid will just be center
+    }
+  }
+  document.getElementById('step1').classList.add('hidden');
+  document.getElementById('step2').classList.remove('hidden');
+  document.getElementById('step2').classList.add('fade-in');
+  document.getElementById('step3').classList.add('hidden');
+  state.step = 2;
+  setProgress(2);
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+/* ============================================================
+   STEP 2
+============================================================ */
+function toggleFood(btn) {
+  const food = btn.dataset.food;
+  if (food === 'なんでもOK') {
+    if (state.selectedFoods.has('なんでもOK')) {
+      state.selectedFoods.delete('なんでもOK');
+      btn.classList.remove('selected');
+    } else {
+      state.selectedFoods.clear();
+      document.querySelectorAll('#foodChips .chip').forEach(b => b.classList.remove('selected'));
+      state.selectedFoods.add('なんでもOK');
+      btn.classList.add('selected');
+    }
+  } else {
+    state.selectedFoods.delete('なんでもOK');
+    document.querySelectorAll('#foodChips .chip[data-food="なんでもOK"]').forEach(b => b.classList.remove('selected'));
+    if (state.selectedFoods.has(food)) {
+      state.selectedFoods.delete(food);
+      btn.classList.remove('selected');
+    } else {
+      state.selectedFoods.add(food);
+      btn.classList.add('selected');
+    }
+  }
+}
+
+function selectBudget(level) {
+  state.selectedBudget = level;
+  document.querySelectorAll('.budget-btn').forEach(b => {
+    b.classList.toggle('selected', parseInt(b.dataset.budget) === level);
+  });
+}
+
+function togglePriority(btn) {
+  const p = btn.dataset.priority;
+  if (state.selectedPriorities.has(p)) {
+    state.selectedPriorities.delete(p);
+    btn.classList.remove('selected');
+  } else {
+    state.selectedPriorities.add(p);
+    btn.classList.add('selected');
+  }
+}
+
+/* ============================================================
+   SEARCH / SCORING
+============================================================ */
+function doSearch() {
+  if (state.selectedFoods.size === 0) { alert('食べ物の系統を1つ以上選択してください。'); return; }
+  if (!state.selectedBudget) { alert('予算感を選択してください。'); return; }
+
+  const overlay = document.getElementById('loadingOverlay');
+  overlay.classList.add('show');
+
+  setTimeout(() => {
+    runSearch();
+    overlay.classList.remove('show');
+    document.getElementById('step2').classList.add('hidden');
+    document.getElementById('step3').classList.remove('hidden');
+    document.getElementById('step3').classList.add('fade-in');
+    state.step = 3;
+    setProgress(3);
+    window.scrollTo({top: 0, behavior: 'smooth'});
+    saveToStorage();
+  }, 1500);
+}
+
+function runSearch() {
+  const memberAreas = state.members.map(m => m.area);
+  const center = centroid(memberAreas);
+  const closestArea = findClosestArea(center.x, center.y);
+
+  // Update banner
+  document.getElementById('areaName').textContent = closestArea;
+  document.getElementById('areaSub').textContent = `全員の中間地点から計算（メンバー${state.members.length}名）`;
+
+  const membersRow = document.getElementById('membersRow');
+  membersRow.innerHTML = state.members.map(m =>
+    `<span class="member-tag">${m.nickname || 'メンバー'} (${m.area})</span>`
+  ).join('');
+
+  const selectedFoodsArr = Array.from(state.selectedFoods);
+  const budget = state.selectedBudget;
+  const priorities = state.selectedPriorities;
+  const anyFood = selectedFoodsArr.includes('なんでもOK');
+
+  const scored = RESTAURANTS.map(r => {
+    // 1. Proximity
+    const areaCoord = AREAS[r.area] || {x:50, y:50};
+    const d = Math.sqrt((areaCoord.x - center.x) ** 2 + (areaCoord.y - center.y) ** 2);
+    const proximityScore = Math.max(0, 100 - d * 3);
+
+    // 2. Food
+    let foodScore = 0;
+    if (anyFood) {
+      foodScore = 50;
+    } else if (selectedFoodsArr.includes(r.category)) {
+      foodScore = 100;
+    }
+
+    // 3. Age
+    const memberAges = state.members.map(m => m.age);
+    const matched = memberAges.filter(a => r.ageTarget.includes(a)).length;
+    const ageScore = (matched / memberAges.length) * 100;
+
+    // 4. Trend
+    const trendScore = (r.instagramScore + r.tiktokScore) / 2;
+
+    // 5. Budget
+    let budgetScore = 0;
+    const diff = Math.abs(r.priceLevel - budget);
+    if (diff === 0) budgetScore = 100;
+    else if (diff === 1) budgetScore = 60;
+    else if (diff === 2) budgetScore = 20;
+
+    // 6. Rating
+    const ratingScore = ((r.rating - 3.5) / 1.5) * 100;
+
+    // 7. Priority bonus
+    let priorityBonus = 0;
+    if (priorities.has('話題のお店')) priorityBonus += trendScore * 0.2;
+    if (priorities.has('コスパ重視') && r.priceLevel <= 2) priorityBonus += 15;
+    if (priorities.has('個室あり') && r.tags.some(t => t.includes('個室'))) priorityBonus += 12;
+    if (priorities.has('雰囲気') && r.tags.some(t => t.includes('個室') || t.includes('デート') || t.includes('夜景'))) priorityBonus += 10;
+    if (priorities.has('静かな席') && !r.tags.some(t => t.includes('賑やか') || t.includes('立ち飲み'))) priorityBonus += 8;
+    if (priorities.has('味優先')) priorityBonus += ratingScore * 0.1;
+    if (priorities.has('コスパ重視') && r.priceLevel === 1) priorityBonus += 10;
+
+    // Party size filter
+    const partyOk = r.minParty <= state.partySize && r.maxParty >= Math.min(state.partySize, r.maxParty);
+
+    const totalScore = 0.35 * proximityScore
+                     + 0.25 * foodScore
+                     + 0.15 * ageScore
+                     + 0.10 * trendScore
+                     + 0.10 * budgetScore
+                     + 0.05 * ratingScore
+                     + priorityBonus;
+
+    return { ...r, proximityScore, foodScore, ageScore, trendScore, budgetScore, ratingScore, totalScore, partyOk, center };
+  });
+
+  // Sort
+  scored.sort((a, b) => b.totalScore - a.totalScore);
+
+  // Trending: top 2 by trendScore (if trendScore > 70)
+  const trending = scored.filter(r => r.trendScore > 70).slice(0, 3);
+  // Main: top 6 overall
+  const main = scored.slice(0, 6);
+
+  state.results = { trending, main, closestArea, center };
+  renderResults(trending, main);
+}
+
+/* ============================================================
+   RENDER RESULTS
+============================================================ */
+function renderResults(trending, main) {
+  const trendingGrid = document.getElementById('trendingGrid');
+  const mainGrid = document.getElementById('mainGrid');
+  const trendingSection = document.getElementById('trendingSection');
+
+  trendingGrid.innerHTML = '';
+  mainGrid.innerHTML = '';
+
+  if (trending.length === 0) {
+    trendingSection.classList.add('hidden');
+  } else {
+    trendingSection.classList.remove('hidden');
+    trending.forEach((r, i) => {
+      trendingGrid.appendChild(makeRestaurantCard(r, i, true));
+    });
+  }
+
+  if (main.length === 0) {
+    mainGrid.innerHTML = `
+      <div class="no-result" style="grid-column:1/-1">
+        <div class="no-result-icon">😔</div>
+        <p>条件に合うお店が見つかりませんでした。<br>エリアや条件を変更してみてください。</p>
+      </div>`;
+  } else {
+    main.forEach((r, i) => {
+      mainGrid.appendChild(makeRestaurantCard(r, i, false));
+    });
+  }
+}
+
+function makeRestaurantCard(r, rank, isTrending) {
+  const card = document.createElement('div');
+  card.className = 'restaurant-card fade-in';
+  card.style.animationDelay = (rank * 0.07) + 's';
+
+  const isTrendBadge = (r.instagramScore + r.tiktokScore) > 140;
+  const center = r.center || {x:50, y:50};
+  const dLabel = distanceLabel(r, center);
+  const mapsUrl = `https://www.google.com/maps/search/${encodeURIComponent(r.name + ' ' + r.area)}`;
+
+  const matchPct = Math.min(100, Math.round(r.totalScore));
+
+  card.innerHTML = `
+    <div class="restaurant-card-header">
+      ${rank === 0 && isTrending ? '<div class="rank-ribbon">🔥 No.1</div>' : ''}
+      ${rank === 0 && !isTrending ? '<div class="rank-ribbon">⭐ Top</div>' : ''}
+      <div class="rc-top">
+        <div class="rc-name">${r.name}</div>
+        <div class="rc-badges">
+          <span class="badge badge-cat">${r.category}</span>
+          ${isTrendBadge ? '<span class="badge badge-trend">🔥 話題</span>' : ''}
+          ${r.rating >= 4.5 ? '<span class="badge badge-classic">⭐ 高評価</span>' : ''}
+        </div>
+      </div>
+      <div class="rc-meta">
+        <span class="rc-stars">${stars(r.rating)}</span>
+        <span>${r.rating.toFixed(1)}</span>
+        <span style="color:var(--text-light)">(${r.reviewCount.toLocaleString()}件)</span>
+        <span class="rc-area">📍 ${r.area}</span>
+        <span class="price-sym">${priceSymbol(r.priceLevel)}</span>
+      </div>
+    </div>
+    <div class="restaurant-card-body">
+      <div class="rc-distance">🗺 ${dLabel}</div>
+      <div class="match-score-bar">
+        <span class="score-label">マッチ度</span>
+        <div class="bar-track"><div class="bar-fill" style="width:${matchPct}%"></div></div>
+        <span class="score-text">${matchPct}%</span>
+      </div>
+      <div class="rc-tags">
+        ${r.tags.map(t => `<span class="rc-tag">${t}</span>`).join('')}
+      </div>
+      <div class="rc-desc">${r.description}</div>
+      <a href="${mapsUrl}" target="_blank" rel="noopener" class="rc-maps-link">
+        📍 Googleマップで見る
+      </a>
+    </div>
+    <div class="sns-section">
+      <div class="sns-row">
+        <span class="sns-label">🟣 Instagram</span>
+        <div class="sns-bar-wrap">
+          <div class="sns-bar sns-bar-ig" style="width:${r.instagramScore}%"></div>
+        </div>
+        <span class="sns-score">${r.instagramScore}</span>
+      </div>
+      <div class="sns-row">
+        <span class="sns-label">⬛ TikTok</span>
+        <div class="sns-bar-wrap">
+          <div class="sns-bar sns-bar-tt" style="width:${r.tiktokScore}%"></div>
+        </div>
+        <span class="sns-score">${r.tiktokScore}</span>
+      </div>
+      <div class="sns-hashtags">
+        ${r.hashtags.map(h => `<span class="hashtag-chip">${h}</span>`).join('')}
+      </div>
+      <div class="sns-timestamp">📅 最終トレンド確認: ${r.lastTrended}</div>
+    </div>
+    <div class="disclaimer">
+      ※ SNSトレンドデータは参考値です。リアルタイム連携にはサーバーが必要です。
+    </div>
+  `;
+  return card;
+}
+
+/* ============================================================
+   RESET
+============================================================ */
+function resetAll() {
+  state.step = 1;
+  state.partySize = null;
+  state.members = [];
+  state.selectedFoods.clear();
+  state.selectedBudget = null;
+  state.selectedPriorities.clear();
+  state.results = [];
+
+  // Reset UI
+  document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('#foodChips .chip').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('.budget-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('#priorityChips .chip').forEach(b => b.classList.remove('selected'));
+  document.getElementById('memberList').classList.add('hidden');
+  document.getElementById('memberList').innerHTML = '';
+  document.getElementById('step1Next').style.display = 'none';
+
+  document.getElementById('step1').classList.remove('hidden');
+  document.getElementById('step2').classList.add('hidden');
+  document.getElementById('step3').classList.add('hidden');
+
+  setProgress(1);
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+/* ============================================================
+   LOCAL STORAGE
+============================================================ */
+function saveToStorage() {
+  try {
+    const data = {
+      partySize: state.partySize,
+      members: state.members,
+      selectedFoods: Array.from(state.selectedFoods),
+      selectedBudget: state.selectedBudget,
+      selectedPriorities: Array.from(state.selectedPriorities),
+      savedAt: new Date().toISOString()
+    };
+    localStorage.setItem('crevlab-groupeats-v1', JSON.stringify(data));
+  } catch (e) { /* ignore */ }
+}
+
+function loadFromStorage() {
+  try {
+    const raw = localStorage.getItem('crevlab-groupeats-v1');
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    // Could restore state here — for now just show last search hint
+    // We skip auto-restore to keep UX simple; data is just persisted
+  } catch (e) { /* ignore */ }
+}
+
+/* ============================================================
+   INIT
+============================================================ */
+(function init() {
+  setProgress(1);
+  loadFromStorage();
+})();
+</script>
+</body>
+</html>
