@@ -10,7 +10,7 @@
 ## Step 1：GitHubリポジトリを作成する
 
 1. https://github.com/new を開く
-2. Repository name: `clarix-hp`（または `clarix.github.io` にすると専用ドメインになる）
+2. Repository name: `crevlab-hp`（または `crevlab.github.io` にすると専用ドメインになる）
 3. Public を選択
 4. "Create repository" をクリック
 
@@ -21,8 +21,8 @@
 ### ターミナル（PowerShell）でコマンドを実行：
 
 ```powershell
-# clarix-hpフォルダへ移動
-cd C:\Users\naoki\ai-company\projects\apps\clarix-hp
+# crevlab-hpフォルダへ移動
+cd C:\Users\naoki\ai-company\projects\apps\crevlab-hp
 
 # Gitを初期化
 git init
@@ -30,7 +30,7 @@ git add index.html
 git commit -m "Initial HP release"
 
 # GitHubに接続（YOUR_USERNAMEをあなたのGitHubユーザー名に置き換える）
-git remote add origin https://github.com/YOUR_USERNAME/clarix-hp.git
+git remote add origin https://github.com/YOUR_USERNAME/crevlab-hp.git
 git branch -M main
 git push -u origin main
 ```
@@ -57,16 +57,16 @@ git push
 
 数分後に以下のURLで公開されます：
 ```
-https://YOUR_USERNAME.github.io/clarix-hp/
+https://YOUR_USERNAME.github.io/crevlab-hp/
 ```
 
 ---
 
 ## Step 4：（オプション）カスタムドメインを設定する
 
-独自ドメイン（例：clarix.com）を持っている場合：
+独自ドメイン（例：crevlab.io）を持っている場合：
 
-1. Pages設定の **Custom domain** に `clarix.com` を入力して Save
+1. Pages設定の **Custom domain** に `crevlab.io` を入力して Save
 2. ドメインのDNS設定で以下のAレコードを追加：
    ```
    185.199.108.153
@@ -81,7 +81,7 @@ https://YOUR_USERNAME.github.io/clarix-hp/
 ## 更新方法（コンテンツ変更後）
 
 ```powershell
-cd C:\Users\naoki\ai-company\projects\apps\clarix-hp
+cd C:\Users\naoki\ai-company\projects\apps\crevlab-hp
 git add index.html
 git commit -m "Update: ○○を追加"
 git push
